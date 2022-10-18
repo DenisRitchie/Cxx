@@ -1,0 +1,226 @@
+# https://json.schemastore.org/clang-format.json
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+---
+# We'll use defaults from the LLVM style, but with 4 columns indentation.
+BasedOnStyle: Microsoft
+IndentWidth: 2
+JavaScriptQuotes: Double
+JavaScriptWrapImports: true
+---
+Language: Proto
+# Don't format .proto files.
+DisableFormat: true
+---
+Language: Cpp
+BasedOnStyle: Microsoft
+AccessModifierOffset: -2
+AlignAfterOpenBracket: BlockIndent # AlwaysBreak # Align
+AlignArrayOfStructures: Right # clang-format 13
+AlignConsecutiveMacros: AcrossEmptyLinesAndComments
+AlignConsecutiveAssignments: AcrossEmptyLinesAndComments
+AlignConsecutiveBitFields: AcrossEmptyLinesAndComments
+AlignConsecutiveDeclarations: AcrossEmptyLinesAndComments
+AlignEscapedNewlines: Right
+AlignOperands: AlignAfterOperator
+AlignTrailingComments: true
+AllowAllArgumentsOnNextLine: true
+# AllowAllConstructorInitializersOnNextLine: true # deprecated: Use PackConstructorInitializers
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortEnumsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortLambdasOnASingleLine: Inline # None # All
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+# AlwaysBreakAfterDefinitionReturnType: None # deprecated: Use AlwaysBreakAfterReturnType
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakTemplateDeclarations: Yes
+AttributeMacros:
+  - __capability
+  - __output
+  - __ununsed
+BinPackArguments: false
+BinPackParameters: false
+BitFieldColonSpacing: Both
+BreakBeforeBraces: Custom # Allman
+BraceWrapping:
+  AfterCaseLabel:        true
+  AfterClass:            true
+  AfterControlStatement: Always
+  AfterEnum:             true
+  AfterFunction:         true
+  AfterNamespace:        true
+  AfterObjCDeclaration:  true
+  AfterStruct:           true
+  AfterUnion:            true
+  AfterExternBlock:      true
+  BeforeCatch:           true
+  BeforeElse:            true
+  BeforeLambdaBody:      true
+  BeforeWhile:           true
+  IndentBraces:          false
+  SplitEmptyFunction:    true
+  SplitEmptyRecord:      true
+  SplitEmptyNamespace:   true
+BreakBeforeBinaryOperators: None
+BreakBeforeConceptDeclarations: true # clang-format 13
+BreakBeforeInheritanceComma: false
+BreakInheritanceList: BeforeColon
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializersBeforeComma: false
+BreakConstructorInitializers: BeforeComma
+BreakAfterJavaFieldAnnotations: false
+BreakStringLiterals: true
+ColumnLimit: 160
+CommentPragmas:  '^ MAGUDALI pragma:'
+CompactNamespaces: false
+# ConstructorInitializerAllOnOneLineOrOnePerLine: false # deprecated: PackConstructorInitializers
+ConstructorInitializerIndentWidth: 2
+ContinuationIndentWidth: 4
+Cpp11BracedListStyle: false
+DeriveLineEnding: true
+DerivePointerAlignment: false
+DisableFormat: false
+EmptyLineAfterAccessModifier: Never # clang-format 13
+EmptyLineBeforeAccessModifier: LogicalBlock # clang-format 13
+ExperimentalAutoDetectBinPacking: false
+FixNamespaceComments: true
+ForEachMacros:
+  - foreach
+  - Q_FOREACH
+  - BOOST_FOREACH
+  - FOREACH
+  - RANGES_FOR
+IfMacros: # clang-format 14
+  - IF
+  - KJ_IF_MAYBE
+IncludeBlocks: Preserve # Regroup
+IncludeCategories:
+  - Regex:           '^"(llvm|llvm-c|clang|clang-c)/'
+    Priority:        2
+    SortPriority:    2
+    CaseSensitive:   true
+  - Regex:           '^((<|")(gtest|gmock|isl|json)/)'
+    Priority:        3
+  - Regex:           '<[[:alnum:].]+>'
+    Priority:        4
+  - Regex:           '.*'
+    Priority:        1
+    SortPriority:    0
+IncludeIsMainRegex: '(Test)?$'
+IncludeIsMainSourceRegex: ''
+IndentAccessModifiers: true # clang-format 13
+IndentCaseLabels: true
+IndentCaseBlocks: false
+IndentGotoLabels: true
+IndentPPDirectives: BeforeHash # AfterHash
+IndentExternBlock: AfterExternBlock
+IndentRequires: false
+# IndentRequiresClause: false # clang-format 15
+IndentWidth: 2
+IndentWrappedFunctionNames: false
+InsertTrailingCommas: None
+KeepEmptyLinesAtTheStartOfBlocks: true
+LambdaBodyIndentation: Signature # clang-format 13
+MacroBlockBegin: "^NS_MAP_BEGIN|NS_TABLE_HEAD$"
+MacroBlockEnd: "^NS_MAP_END|NS_TABLE_.*_END$"
+MaxEmptyLinesToKeep: 1
+NamespaceIndentation: All
+NamespaceMacros: # clang-format 9
+  - TESTSUITE
+  - NAMESPACE
+ObjCBinPackProtocolList: Auto
+ObjCBlockIndentWidth: 2
+ObjCBreakBeforeNestedBlockParam: true
+ObjCSpaceAfterProperty: false
+ObjCSpaceBeforeProtocolList: true
+PPIndentWidth: 1 # clang-format 14
+PackConstructorInitializers: Never # clang-format 14
+PenaltyBreakAssignment: 2
+PenaltyBreakBeforeFirstCallParameter: 19
+PenaltyBreakComment: 300
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakString: 1000
+PenaltyBreakTemplateDeclaration: 10
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 1000
+PenaltyIndentedWhitespace: 0
+PointerAlignment: Left
+QualifierAlignment: Custom # Leave # clang-format 14
+QualifierOrder: ['inline', 'static', 'constexpr', 'const', 'volatile', 'type', 'restrict']
+RawStringFormats:
+  - Language: TextProto
+    Delimiters:
+      - 'pb'
+      - 'proto'
+    EnclosingFunctions:
+      - 'PARSE_TEXT_PROTO'
+    BasedOnStyle: google
+  - Language: Cpp
+    Delimiters:
+      - 'cc'
+      - 'cpp'
+    BasedOnStyle: llvm
+    CanonicalDelimiter: 'Cpp'
+ReferenceAlignment: Pointer # clang-format 14
+ReflowComments: true
+RemoveBracesLLVM: false # clang-format 14
+# RequiresClausePosition: OwnLine # clang-format 15
+SeparateDefinitionBlocks: Always # clang-format 14
+ShortNamespaceLines: 1 # clang-format 14
+SortIncludes: Never
+SortJavaStaticImport: Before
+SortUsingDeclarations: true
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCaseColon: false
+SpaceBeforeCpp11BracedList: false
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: Custom # clang-format 14
+SpaceBeforeParensOptions: # clang-format 14
+  AfterControlStatements:       true
+  AfterForeachMacros:           false
+  AfterFunctionDeclarationName: false
+  AfterFunctionDefinitionName:  false
+  AfterIfMacros:                false
+  AfterOverloadedOperator:      false
+  BeforeNonEmptyParentheses:    false
+SpaceAroundPointerQualifiers: Default
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceBeforeSquareBrackets: false
+SpaceInEmptyBlock: true
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles: Never # clang-format 14
+SpacesInConditionalStatement: true
+SpacesInContainerLiterals: false
+SpacesInCStyleCastParentheses: false
+SpacesInLineCommentPrefix: # clang-format 14
+  Minimum: 1
+  Maximum: -1
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+Standard: Latest
+StatementMacros:
+  - Q_UNUSED
+  - QT_REQUIRE_VERSION
+StatementAttributeLikeMacros:
+  - Q_EMIT
+TabWidth: 2
+TypenameMacros:
+  - STACK_OF
+  - LIST_ENTRY
+UseCRLF: false
+UseTab: Never
+WhitespaceSensitiveMacros:
+  - STRINGIZE
+  - PP_STRINGIZE
+  - BOOST_PP_STRINGIZE
+  - NS_SWIFT_NAME
+  - CF_SWIFT_NAME
+...
