@@ -26,8 +26,14 @@ add_library(${PROJECT_NAME} STATIC)
 
 target_sources(${PROJECT_NAME}
     PUBLIC
+        Includes/SemanticValue.hpp
         Includes/ServiceLocator.hpp
         Sources/ServiceLocator.cpp
+
+    PRIVATE
+        Includes/Details/Optional.hpp
+        Includes/Details/Reference.hpp
+        Includes/Details/TypeTraits.hpp
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)

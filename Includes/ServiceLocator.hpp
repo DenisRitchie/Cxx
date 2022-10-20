@@ -1,12 +1,14 @@
 #ifndef E1D945BB_547E_48B0_9B18_5B42135FBFA2
 #define E1D945BB_547E_48B0_9B18_5B42135FBFA2
 
-#include "Optional.hpp"
-#include "Reference.hpp"
+#include "Details/Optional.hpp"
+#include "Details/Reference.hpp"
+#include "Details/TypeTraits.hpp"
 #include "SemanticValue.hpp"
 
 #include <string>
 #include <optional>
+#include <concepts>
 #include <stdexcept>
 #include <typeindex>
 #include <functional>
@@ -26,12 +28,10 @@ namespace NativeDesignPatterns
 
       static ServiceLocator& Default() noexcept;
 
-      template <typename ServiceType, typename ServiceValue = ServiceType>
-      ServiceLocator& Register()
+      template <typename ServiceType, typename ServiceValue = ServiceType, typename... Arguments>
+      ServiceLocator& Register(Arguments&&... Args)
       {
-        m_Services.insert_or_assign(std::type_index(typeid(ServiceType)), SemanticValue<ServiceType>(ServiceValue{}));
-
-        return *this;
+        return Register<ServiceType, ServiceValue>(ServiceValue(std::forward<Arguments>(Args)...));
       }
 
       template <typename ServiceType, typename ServiceValue>
@@ -39,59 +39,77 @@ namespace NativeDesignPatterns
       {
         if constexpr ( std::is_invocable_v<ServiceValue> )
         {
-          m_Services.insert_or_assign(std::type_index(typeid(ServiceType)), SemanticValue<ServiceType>(std::invoke(Value)));
+          m_Services.insert_or_assign( //
+              std::type_index(typeid(ServiceType)),
+              SemanticValue<ServiceType>(std::invoke(Value))
+          );
         }
         else
         {
-          m_Services.insert_or_assign(std::type_index(typeid(ServiceType)), SemanticValue<ServiceType>(Value));
+          m_Services.insert_or_assign( //
+              std::type_index(typeid(ServiceType)),
+              SemanticValue<ServiceType>(Value)
+          );
         }
 
         return *this;
       }
 
-      template <typename ServiceType>
-      const ServiceType& GetService() const
+      template <typename ServiceType, typename Self>
+      auto GetService(this Self&& This) noexcept(false) //
+          -> std::add_lvalue_reference_t<std::conditional_t<
+              std::is_const_v<std::remove_reference_t<Self>>,
+              /* case true  */ std::add_const_t<ServiceType>,
+              /* case false */ ServiceType>>
       {
-        if ( auto It = m_Services.find(std::type_index(typeid(ServiceType))); It != m_Services.end() )
+        if ( auto It = This.m_Services.find(std::type_index(typeid(ServiceType))); It != This.m_Services.end() )
         {
-          return *std::any_cast<const SemanticValue<ServiceType>&>(It->second);
+          return *std::any_cast<std::add_lvalue_reference_t<std::conditional_t< //
+              std::is_const_v<std::remove_reference_t<Self>>,
+              /* case true  */ std::add_const_t<SemanticValue<ServiceType>>,
+              /* case false */ SemanticValue<ServiceType>>>>( //
+              It->second
+          );
         }
 
         throw std::logic_error("Unregistered Service");
       }
 
-      template <typename ServiceType>
-      ServiceType& GetService()
+      template <typename ServiceType, typename Self>
+      auto Resolve(this Self&& This) noexcept //
+          -> std::conditional_t<
+              std::is_const_v<std::remove_reference_t<Self>>,
+              /* case true  */ const Optional<const Reference<const ServiceType>>,
+              /* case false */ Optional<Reference<ServiceType>>>
       {
-        if ( auto It = m_Services.find(std::type_index(typeid(ServiceType))); It != m_Services.end() )
+        if ( auto It = This.m_Services.find(std::type_index(typeid(ServiceType))); It != This.m_Services.end() )
         {
-          return *std::any_cast<SemanticValue<ServiceType>&>(It->second);
-        }
-
-        throw std::logic_error("Unregistered Service");
-      }
-
-      template <typename ServiceType>
-      const Optional<Reference<ServiceType>> GetServiceOrDefault() const
-      {
-        if ( auto It = m_Services.find(std::type_index(typeid(ServiceType))); It != m_Services.end() )
-        {
-          return *std::any_cast<const SemanticValue<ServiceType>&>(It->second);
+          return *std::any_cast<std::conditional_t< //
+              std::is_const_v<std::remove_reference_t<Self>>,
+              /* case true  */ const SemanticValue<ServiceType>,
+              /* case false */ SemanticValue<ServiceType>>&>( //
+              It->second
+          );
         }
 
         return std::nullopt;
       }
 
       template <typename ServiceType>
-      Optional<Reference<ServiceType>> GetServiceOrDefault()
-      {
-        if ( auto It = m_Services.find(std::type_index(typeid(ServiceType))); It != m_Services.end() )
-        {
-          return *std::any_cast<SemanticValue<ServiceType>&>(It->second);
-        }
+      inline static Optional<SemanticValue<ServiceType>> Value;
 
-        return std::nullopt;
+      // clang-format off
+      template <typename... FactoryTypes>
+      // requires ((Details::ServiceLocatorFactoryTraits<FactoryTypes>::IsDefaultConstructible && requires(const FactoryTypes Factory)
+      // {
+      //   { Factory.operator()() }; // -> std::same_as<SemanticValue<typename Details::ServiceLocatorFactoryTraits<FactoryTypes>::ElementType>>;
+      // }) && ...)
+      inline static void UseFactory()
+      {
+        ((ServiceLocator::Value<typename Details::ServiceLocatorFactoryTraits<FactoryTypes>::ValueType> = FactoryTypes()()), ...);
       }
+
+      // clang-format on
 
     private:
       std::unordered_map<std::type_index, std::any> m_Services;

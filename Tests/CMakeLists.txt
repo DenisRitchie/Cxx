@@ -35,6 +35,11 @@ target_link_libraries(${TEST_PROJECT_NAME}
         NativeDesignPatterns
 )
 
+target_include_directories(${TEST_PROJECT_NAME}
+    PUBLIC
+        ${CMAKE_SOURCE_DIR}/Includes
+)
+
 target_compile_features(${TEST_PROJECT_NAME} PUBLIC cxx_std_23)
 
 include(GoogleTest)
