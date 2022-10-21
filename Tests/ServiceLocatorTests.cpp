@@ -11,6 +11,16 @@
 using namespace std;
 using namespace NativeDesignPatterns;
 
+SemanticValue<string> StringFactory()
+{
+  return "String Factory"s;
+}
+
+SemanticValue<int32_t> Int32Factory()
+{
+  return 154'000;
+}
+
 struct IPerson
 {
     virtual std::string_view GetValue() const noexcept = 0;
@@ -21,6 +31,14 @@ struct Person : public IPerson
     virtual std::string_view GetValue() const noexcept override
     {
       return "Denis West";
+    }
+};
+
+struct PersonFactory
+{
+    SemanticValue<IPerson> operator()() const noexcept
+    {
+      return Person{};
     }
 };
 
@@ -46,7 +64,7 @@ struct Service : public IService
 
 struct ServiceFactory
 {
-    NativeDesignPatterns::SemanticValue<IService> operator()() const noexcept
+    SemanticValue<IService> operator()() const noexcept
     {
       return Service{ "IService.Value" };
     }
@@ -61,60 +79,109 @@ TEST(ServiceLocatorTest, LocalInstance)
   Locator.Register<int32_t>(50);
   Locator.Register<std::shared_ptr<std::string>>([] { return std::make_shared<std::string>(30, '*'); });
 
-  std::is_copy_constructible_v<Person>;
-  std::is_move_constructible_v<Person>;
-
   EXPECT_EQ(Locator.GetService<IPerson>().GetValue(), "Denis West"sv);
   EXPECT_EQ(Locator.GetService<IService>().GetValue(), "IService"sv);
+  EXPECT_EQ(Locator.GetService<std::string>(), std::string(30, '-'));
+  EXPECT_EQ(Locator.GetService<int32_t>(), 50);
+  EXPECT_EQ(Locator.GetService<std::shared_ptr<std::string>>()->compare(std::string(30, '*')), 0);
   EXPECT_EQ(Locator.Resolve<std::shared_ptr<std::string>>()->compare(std::string(30, '*')), 0);
+
+  Locator.Resolve<std::shared_ptr<std::string>>().operator->().operator->() = std::make_shared<std::string>("Hola");
+  EXPECT_EQ(*Locator.Resolve<std::shared_ptr<std::string>>(), "Hola"s);
+
+  Locator.GetService<int32_t>() += 100;
+  EXPECT_EQ(*Locator.Resolve<int32_t>(), 150);
 }
 
-TEST(ServiceLocatorTest, GetInstance)
+TEST(ServiceLocatorTest, ConstLocalInstance)
 {
-  ServiceLocator::Default().Register<std::string>("String"s);
-  EXPECT_EQ(ServiceLocator::Default().GetService<std::string>(), "String"s);
-
-  EXPECT_THROW(ServiceLocator::Default().GetService<int32_t>(), std::logic_error);
-
-  ServiceLocator::Default().GetService<std::string>() = "New String";
-  EXPECT_EQ(ServiceLocator::Default().GetService<std::string>(), "New String"s);
+  const ServiceLocator Locator;
+  EXPECT_THROW(Locator.GetService<IPerson>().GetValue(), std::logic_error);
+  EXPECT_THROW(Locator.GetService<IService>().GetValue(), std::logic_error);
+  EXPECT_THROW(Locator.GetService<std::string>(), std::logic_error);
+  EXPECT_THROW(Locator.GetService<int32_t>(), std::logic_error);
+  EXPECT_THROW([[maybe_unused]] auto Result = Locator.GetService<std::shared_ptr<std::string>>()->compare(std::string(30, '*')), std::logic_error);
+  EXPECT_THROW([[maybe_unused]] auto Result = Locator.Resolve<std::shared_ptr<std::string>>()->compare(std::string(30, '*')), std::bad_optional_access);
+  EXPECT_THROW(*Locator.Resolve<std::string>(), std::bad_optional_access);
+  EXPECT_THROW(*Locator.Resolve<std::shared_ptr<std::string>>(), std::bad_optional_access);
+  EXPECT_THROW(*Locator.Resolve<int32_t>(), std::bad_optional_access);
 }
 
-TEST(ServiceLocatorTest, Resolve)
+TEST(ServiceLocatorTest, UseFactoryAndValue)
 {
-  using namespace std;
-  using namespace NativeDesignPatterns;
+  ServiceLocator::UseFactory<PersonFactory, ServiceFactory>(StringFactory, Int32Factory, []() -> SemanticValue<std::string_view> { return "Text"sv; });
+  ServiceLocator::UseFactory([]() -> SemanticValue<std::vector<int32_t>> { return std::vector{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }; });
 
-  ServiceFactory F;
-  F()->GetValue();
-
-  ServiceLocator::UseFactory<ServiceFactory>();
   EXPECT_EQ(ServiceLocator::Value<IService>->GetValue(), "IService.Value"sv);
+  EXPECT_EQ(ServiceLocator::Value<IPerson>->GetValue(), "Denis West"sv);
+  EXPECT_EQ(*ServiceLocator::Value<int32_t>, 154'000);
+  EXPECT_EQ(*ServiceLocator::Value<std::string>, "String Factory"s);
+  EXPECT_EQ(ServiceLocator::Value<std::string>->compare("String Factory"), 0);
 
-  ServiceLocator::Default().Register<std::string>("String"s);
-  EXPECT_TRUE(ServiceLocator::Default().Resolve<std::string>().has_value());
-  EXPECT_EQ(*ServiceLocator::Default().Resolve<std::string>(), "String"s);
-  EXPECT_EQ(ServiceLocator::Default().Resolve<std::string>().operator*(), "String"s);
+  for ( size_t Index = 0, ExpectValue = 1; Index < ServiceLocator::Value<std::vector<int32_t>>->size(); ++Index, ++ExpectValue )
+  {
+    EXPECT_EQ(ServiceLocator::Value<std::vector<int32_t>>[Index], ExpectValue);
+    ServiceLocator::Value<std::vector<int32_t>>[Index] *= 10;
+  }
 
-  EXPECT_STREQ(ServiceLocator::Default().Resolve<std::string>()->c_str(), "String");
+  for ( size_t Index = 0, ExpectValue = 10; Index < ServiceLocator::Value<std::vector<int32_t>>->size(); ++Index, ExpectValue += 10 )
+  {
+    EXPECT_EQ(ServiceLocator::Value<std::vector<int32_t>>->at(Index), ExpectValue);
+  }
+}
 
-  EXPECT_NO_THROW(ServiceLocator::Default().Resolve<int32_t>());
+TEST(ServiceLocatorTest, GlobalService)
+{
+  ServiceLocator::Default().Register<IPerson, Person>();
+  ServiceLocator::Default().Register<IService, Service>("IService");
+  ServiceLocator::Default().Register<std::string>(30, '-');
+  ServiceLocator::Default().Register<int32_t>(50);
+  ServiceLocator::Default().Register<std::shared_ptr<std::string>>([] { return std::make_shared<std::string>(30, '*'); });
 
-  // SemanticValue<std::string>                  S{ ""s };
-  // SemanticValue<std::string>::type            T1;
-  // SemanticValue<std::string>::reference       T2 = T1;
-  // SemanticValue<std::string>::pointer         T3 = nullptr;
-  // SemanticValue<std::string>::const_reference T4 = "Hola";
-  // SemanticValue<std::string>::const_pointer   T5 = nullptr;
+  EXPECT_EQ(ServiceLocator::Default().GetService<IPerson>().GetValue(), "Denis West"sv);
+  EXPECT_EQ(ServiceLocator::Default().GetService<IService>().GetValue(), "IService"sv);
+  EXPECT_EQ(ServiceLocator::Default().GetService<std::string>(), std::string(30, '-'));
+  EXPECT_EQ(ServiceLocator::Default().GetService<int32_t>(), 50);
+  EXPECT_EQ(ServiceLocator::Default().GetService<std::shared_ptr<std::string>>()->compare(std::string(30, '*')), 0);
+  EXPECT_EQ(ServiceLocator::Default().Resolve<std::shared_ptr<std::string>>()->compare(std::string(30, '*')), 0);
 
-  const ServiceLocator    Locator;
-  // Locator.GetService<std::string>() = "Hola";
-  [[maybe_unused]] auto&& V1 = ServiceLocator::Value<std::string>->c_str();
-  // Locator.Resolve<std::string>().operator->().operator->()->shrink_to_fit();
-  [[maybe_unused]] auto&& V2 = Locator.Resolve<std::string>().operator->().operator->()->c_str();
+  ServiceLocator::Default().Resolve<std::shared_ptr<std::string>>().operator->().operator->() = std::make_shared<std::string>("Hola");
+  EXPECT_EQ(*ServiceLocator::Default().Resolve<std::shared_ptr<std::string>>(), "Hola"s);
 
-  // std::optional<int32_t>                      O;
-  // O.                                          operator=(10);
-  // Optional<int32_t>                           O2;
-  // O2.                                         operator=(O);
+  ServiceLocator::Default().GetService<int32_t>() += 100;
+  EXPECT_EQ(*ServiceLocator::Default().Resolve<int32_t>(), 150);
+
+  ServiceLocator::Default().Register<std::string, std::string>("Test of Text");
+  EXPECT_EQ(ServiceLocator::Default().GetService<std::string>().compare("Test of Text"), 0);
+  EXPECT_EQ(ServiceLocator::Default().Resolve<std::string>()->compare("Test of Text"), 0);
+
+  ServiceLocator::Default().Register<IService>([] { return Service{ "Example Services" }; });
+  EXPECT_EQ(ServiceLocator::Default().GetService<IService>().GetValue(), "Example Services"sv);
+  EXPECT_EQ(ServiceLocator::Default().Resolve<IService>()->GetValue(), "Example Services"sv);
+
+  ServiceLocator::Default().Register<IService, Service>("Constructor Arguments Example");
+  EXPECT_EQ(ServiceLocator::Default().GetService<IService>().GetValue(), "Constructor Arguments Example"sv);
+  EXPECT_EQ(ServiceLocator::Default().Resolve<IService>().operator->().operator->()->GetValue(), "Constructor Arguments Example"sv);
+
+  ServiceLocator::Default().InvokeFactory<PersonFactory, ServiceFactory>(
+      StringFactory, Int32Factory, []() -> SemanticValue<std::string_view> { return "Text"sv; }
+  );
+  ServiceLocator::Default().InvokeFactory([]() -> SemanticValue<std::vector<int32_t>> { return std::vector{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }; });
+
+  EXPECT_EQ(ServiceLocator::Default().Resolve<IService>()->GetValue(), "IService.Value"sv);
+  EXPECT_EQ(ServiceLocator::Default().Resolve<IPerson>()->GetValue(), "Denis West"sv);
+  EXPECT_EQ(*ServiceLocator::Default().Resolve<int32_t>(), 154'000);
+  EXPECT_EQ(*ServiceLocator::Default().Resolve<std::string>(), "String Factory"s);
+  EXPECT_EQ(ServiceLocator::Default().Resolve<std::string>()->compare("String Factory"), 0);
+
+  for ( size_t Index = 0, ExpectValue = 1; Index < ServiceLocator::Default().Resolve<std::vector<int32_t>>()->size(); ++Index, ++ExpectValue )
+  {
+    EXPECT_EQ(ServiceLocator::Default().Resolve<std::vector<int32_t>>()[Index], ExpectValue);
+    ServiceLocator::Default().GetService<std::vector<int32_t>>()[Index] *= 10;
+  }
+
+  for ( size_t Index = 0, ExpectValue = 10; Index < ServiceLocator::Default().GetService<std::vector<int32_t>>().size(); ++Index, ExpectValue += 10 )
+  {
+    EXPECT_EQ(ServiceLocator::Default().Resolve<std::vector<int32_t>>()->at(Index), ExpectValue);
+  }
 }

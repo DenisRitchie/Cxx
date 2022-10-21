@@ -72,7 +72,7 @@ namespace NativeDesignPatterns
     template <typename FactoryType>
     requires requires(const FactoryType Factory)
     {
-      { Factory() }; // -> std::same_as<typename SemanticValue<TemplateTraits<decltype(Factory())>>::ElementType>;
+      { Factory() } -> std::same_as<SemanticValue<typename TemplateTraits<decltype(Factory())>::ElementType>>;
     }
     struct ServiceLocatorFactoryTraits
     {

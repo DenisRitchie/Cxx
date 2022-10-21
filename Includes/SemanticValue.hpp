@@ -18,15 +18,57 @@ namespace NativeDesignPatterns
       using const_reference = const element_type&;
       using const_pointer   = const element_type*;
 
+      template <typename Type>
+      friend class SemanticValue;
+
       template <typename DerivedType>
       constexpr SemanticValue(DerivedType&& value) noexcept
         : object{ std::forward<DerivedType>(value) }
-        , getter{ [](std::any& object) -> BaseType&
-                  {
-                    return std::any_cast<DerivedType&>(object);
-                  } }
+        , getter{ InvokeGetter<DerivedType> }
       {
       }
+
+      template <typename DerivedType>
+      SemanticValue(const SemanticValue<DerivedType>& other) noexcept
+        : object{ other.object }
+        , getter{ other.getter }
+      {
+      }
+
+      template <typename DerivedType>
+      SemanticValue(SemanticValue<DerivedType>&& other) noexcept
+        : object{ std::move(other.object) }
+        , getter{ std::move(other.getter) }
+      {
+        other.getter = nullptr;
+      }
+
+      template <typename DerivedType>
+      SemanticValue<BaseType>& operator=(const SemanticValue<DerivedType>& other) noexcept
+      {
+        if ( this != &other )
+        {
+          this->object = other.object;
+          this->getter = other.getter;
+        }
+
+        return *this;
+      }
+
+      template <typename DerivedType>
+      SemanticValue<BaseType>& operator=(SemanticValue<DerivedType>&& other) noexcept
+      {
+        if ( this != &other )
+        {
+          this->object = std::move(other.object);
+          this->getter = std::move(other.getter);
+          other.getter = nullptr;
+        }
+
+        return *this;
+      }
+
+      ~SemanticValue() noexcept = default;
 
       template <typename Self>
       inline constexpr auto operator*(this Self&& self) noexcept
@@ -44,7 +86,13 @@ namespace NativeDesignPatterns
 
     private:
       std::any object;
-      reference (*getter)(std::any&);
+      reference (*getter)(std::any&) = nullptr;
+
+      template <typename DerivedType>
+      inline static auto InvokeGetter(std::any& object) -> BaseType&
+      {
+        return std::any_cast<DerivedType&>(object);
+      }
   };
 } // namespace NativeDesignPatterns
 

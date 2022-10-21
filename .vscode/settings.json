@@ -25,6 +25,14 @@
     "testMate.cpp.test.executables": "{build,Build,BUILD,out,Out,OUT}/**/*{test,Test,TEST}*",
     "C_Cpp.default.cStandard": "c17",
     "C_Cpp.default.cppStandard": "c++23",
+    "C_Cpp.errorSquiggles": "disabled",
+    "C_Cpp.vcpkg.enabled": false,
+    "C_Cpp.default.intelliSenseMode": "windows-msvc-x64",
+    "C_Cpp.intelliSenseCacheSize": 1048576,
+    "C_Cpp.intelliSenseMemoryLimit": 16384,
+    "files.encoding": "utf8",
+    "files.insertFinalNewline": true,
+    "files.maxMemoryForLargeFilesMB": 1048576,
     "editor.tokenColorCustomizations": {
         "textMateRules": [
             {

@@ -28,6 +28,28 @@ namespace NativeDesignPatterns
 
       static ServiceLocator& Default() noexcept;
 
+      // clang-format off
+
+      template <typename... FactoryTypes, typename... FactoryFunctions>
+      requires ((Details::ServiceLocatorFactoryTraits<FactoryTypes>::IsDefaultConstructible && requires(const FactoryTypes Factory)
+      {
+        { Factory() } -> std::same_as<SemanticValue<typename TemplateTraits<decltype(Factory())>::ElementType>>;
+      }) && ...)
+      ServiceLocator& InvokeFactory(FactoryFunctions&&... Factory)
+      {
+        (m_Services.insert_or_assign(
+          std::type_index(typeid(typename Details::ServiceLocatorFactoryTraits<FactoryTypes>::ValueType)),
+          std::move(FactoryTypes()())), ...);
+
+        (m_Services.insert_or_assign(
+          std::type_index(typeid(typename Details::ServiceLocatorFactoryTraits<FactoryFunctions>::ValueType)),
+          std::move(Factory())), ...);
+
+        return *this;
+      }
+
+      // clang-format on
+
       template <typename ServiceType, typename ServiceValue = ServiceType, typename... Arguments>
       ServiceLocator& Register(Arguments&&... Args)
       {
@@ -39,17 +61,11 @@ namespace NativeDesignPatterns
       {
         if constexpr ( std::is_invocable_v<ServiceValue> )
         {
-          m_Services.insert_or_assign( //
-              std::type_index(typeid(ServiceType)),
-              SemanticValue<ServiceType>(std::invoke(Value))
-          );
+          m_Services.insert_or_assign(std::type_index(typeid(ServiceType)), SemanticValue<ServiceType>(std::invoke(Value)));
         }
         else
         {
-          m_Services.insert_or_assign( //
-              std::type_index(typeid(ServiceType)),
-              SemanticValue<ServiceType>(Value)
-          );
+          m_Services.insert_or_assign(std::type_index(typeid(ServiceType)), SemanticValue<ServiceType>(Value));
         }
 
         return *this;
@@ -99,14 +115,16 @@ namespace NativeDesignPatterns
       inline static Optional<SemanticValue<ServiceType>> Value;
 
       // clang-format off
-      template <typename... FactoryTypes>
-      // requires ((Details::ServiceLocatorFactoryTraits<FactoryTypes>::IsDefaultConstructible && requires(const FactoryTypes Factory)
-      // {
-      //   { Factory.operator()() }; // -> std::same_as<SemanticValue<typename Details::ServiceLocatorFactoryTraits<FactoryTypes>::ElementType>>;
-      // }) && ...)
-      inline static void UseFactory()
+
+      template <typename... FactoryTypes, typename ...FactoryFunctions>
+      requires ((Details::ServiceLocatorFactoryTraits<FactoryTypes>::IsDefaultConstructible && requires(const FactoryTypes Factory)
       {
-        ((ServiceLocator::Value<typename Details::ServiceLocatorFactoryTraits<FactoryTypes>::ValueType> = FactoryTypes()()), ...);
+        { Factory() } -> std::same_as<SemanticValue<typename TemplateTraits<decltype(Factory())>::ElementType>>;
+      }) && ...)
+      inline static void UseFactory(FactoryFunctions &&... Factory)
+      {
+        ((ServiceLocator::Value<typename Details::ServiceLocatorFactoryTraits<FactoryTypes>::ValueType> = std::move(FactoryTypes()())), ...);
+        ((ServiceLocator::Value<typename Details::ServiceLocatorFactoryTraits<FactoryFunctions>::ValueType> = std::move(Factory())), ...);
       }
 
       // clang-format on

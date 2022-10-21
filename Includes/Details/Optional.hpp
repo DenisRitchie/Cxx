@@ -15,8 +15,14 @@ namespace NativeDesignPatterns
       using BaseType::optional;
       using BaseType::operator=;
 
+      template <typename Self, std::integral... Indexes>
+      constexpr auto&& operator[](this Self&& This, const Indexes... Index) noexcept(false)
+      {
+        return This->operator[](Index...);
+      }
+
       template <typename Self>
-      constexpr auto&& operator*(this Self&& This) noexcept
+      constexpr auto&& operator*(this Self&& This) noexcept(false)
       {
         if constexpr ( requires { *This.value(); } )
         {
@@ -37,7 +43,7 @@ namespace NativeDesignPatterns
       }
 
       template <typename Self>
-      constexpr auto&& operator->(this Self&& This) noexcept
+      constexpr auto&& operator->(this Self&& This) noexcept(false)
       {
         if constexpr ( requires { This.value().operator->(); } )
         {
