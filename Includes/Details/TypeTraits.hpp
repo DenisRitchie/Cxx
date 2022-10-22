@@ -51,18 +51,22 @@ namespace NativeDesignPatterns
     {
         using Type = typename TemplateType::template Rebind<OtherType>;
     };
+
+    template <typename Type>
+    using RemoveAllSymbols = std::remove_cv_t<std::remove_all_extents_t<std::remove_pointer_t<std::remove_cvref_t<Type>>>>;
   } // namespace Details
 
-  // std::pointer_traits<T>;
+  template <typename Type, typename... Types>
+  inline constexpr bool IsAnyOf = std::disjunction_v<std::is_same<Type, Types>...>;
 
   template <typename TemplateType>
   struct TemplateTraits
   {
-      using Template    = TemplateType;
-      using ElementType = typename Details::GetElementType<TemplateType>::Type;
+      using Template    = Details::RemoveAllSymbols<TemplateType>;
+      using ElementType = typename Details::GetElementType<Template>::Type;
 
       template <typename OtherType>
-      using Rebind = typename Details::GetRebindAlias<TemplateType, OtherType>::Type;
+      using Rebind = typename Details::GetRebindAlias<Template, OtherType>::Type;
   };
 
   namespace Details

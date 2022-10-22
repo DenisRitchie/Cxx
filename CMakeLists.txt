@@ -16,7 +16,7 @@ MessageLog("${PROJECT_NAME} v${PROJECT_VERSION}: ${PROJECT_DESCRIPTION}")
 
 if (MSVC)
     # Warning level 4 and all warnings as errors
-    add_compile_options(/W4 /WX)
+    add_compile_options(/W4 /WX /await:strict)
 else()
     # Lots of warnings and all warnings as errors
     add_compile_options(-Wall -Wextra -pedantic -Werror)
@@ -26,6 +26,8 @@ add_library(${PROJECT_NAME} STATIC)
 
 target_sources(${PROJECT_NAME}
     PUBLIC
+        Includes/Generator.hpp
+        Includes/ExtensionMethods.hpp
         Includes/SemanticValue.hpp
         Includes/ServiceLocator.hpp
         Sources/ServiceLocator.cpp

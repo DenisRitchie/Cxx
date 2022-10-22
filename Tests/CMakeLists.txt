@@ -26,7 +26,7 @@ FetchContent_MakeAvailable(googletest)
 
 set(TEST_PROJECT_NAME NativeDesignPatternTests)
 
-add_executable(${TEST_PROJECT_NAME} MainTests.cpp ServiceLocatorTests.cpp)
+add_executable(${TEST_PROJECT_NAME} MainTests.cpp ServiceLocatorTests.cpp ExtensionMethodTests.cpp)
 
 target_link_libraries(${TEST_PROJECT_NAME}
     PUBLIC
