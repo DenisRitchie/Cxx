@@ -2,17 +2,21 @@
 
 ## Patrones de diseños en código nativo C++
 
-1. Service Locator
+1. *`ServiceLocator`*
    * Helpers
-     * Optional
-     * Reference
-     * TypeTraits
+     * *`Optional<TValue>`*
+     * *`Reference<TValue>`*
+     * TypeTraits Header
    * Tipos
-     * `ServiceLocator Locator;` Definido como una instancia
-     * `ServiceLocator::Default();` Como singletón seguro para hilos
-     * `ServiceLocator::Value<ServiceType>;` Como instancia estática singletón genérica
+     * *`ServiceLocator Locator`* Definido como una instancia
+     * *`ServiceLocator::Default()`* Como singletón seguro para hilos
+     * *`ServiceLocator::Value<ServiceType>`* Como instancia estática singletón genérica
 
-2. Semantic Value `std::any` Polimorfismo sin punteros
+2. *`SemanticValue<TBase>`* Polimorfismo sin punteros
+
+3. *`Generator<TValue>`* Usando por el operador ***co_yield***
+
+4. *`auto operator->*(Object, MethodOrPropertyExtender)`* Para simular propiedades/métodos extensores :point_right: [*Referencia C#*](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods)
 
 ### Ejemplo: Registrando un servicio
 
@@ -219,4 +223,139 @@ public:
   template <typename Self>
   constexpr decltype(auto) operator->(this Self&& This) noexcept;
 };
+```
+
+## Generator API
+
+```cpp
+template <typename Type>
+class Generator
+{
+public:
+  using handle_type = std::coroutine_handle<promise_type>;
+
+  struct promise_type
+  {
+    promise_type& get_return_object();
+
+    std::suspend_always initial_suspend();
+    std::suspend_always final_suspend() noexcept;
+    std::suspend_always yield_value(Type const& other);
+
+    void return_void();
+    void unhandled_exception();
+    void rethrow_if_failed();
+
+    template <typename Expression>
+    Expression&& await_transform(Expression&& expression);
+  };
+
+  struct iterator
+  {
+    using iterator_category = std::input_iterator_tag;
+    using value_type        = Type;
+    using difference_type   = ptrdiff_t;
+    using pointer           = const Type*;
+    using reference         = const Type&;
+
+    bool operator==(const iterator& other) const;
+    bool operator!=(const iterator& other) const;
+
+    iterator  operator++(int) = delete;
+    iterator& operator++()
+
+    const Type& operator*() const;
+    const Type* operator->() const;
+  };
+
+  Generator()                            = default;
+  Generator(const Generator&)            = delete;
+  Generator& operator=(const Generator&) = delete;
+
+  Generator(promise_type& promise);
+  Generator(Generator&& other);
+  Generator& operator=(Generator&& other);
+  ~Generator();
+
+  iterator begin();
+  iterator end();
+};
+```
+
+## Extension Methods API
+
+```cpp
+template <typename ValueType, typename ExtensionType>
+constexpr decltype(auto) operator->*(ValueType&& Value, ExtensionType&& Extension);
+
+namespace NativeDesignPatterns::LINQ::MethodSyntax
+{
+  /*
+    inline constexpr PropertyDetails::LengthImplementation Count;
+    inline constexpr PropertyDetails::LengthImplementation Size;
+    inline constexpr PropertyDetails::LengthImplementation Length;
+  */
+
+  // Ejemplo: Read-Only Properties (Count, Size, Length)
+
+  std::string Value = "Denis West";
+
+  std::cout << "Count  Property: " << Value->*Count  << std::endl; // Count  Property: 10
+  std::cout << "Size   Property: " << Value->*Size   << std::endl; // Size   Property: 10
+  std::cout << "Length Property: " << Value->*Length << std::endl; // Length Property: 10
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /*
+    inline constexpr PropertyDetails::UpperCaseImplementation UpperCase;
+    inline constexpr PropertyDetails::LowerCaseImplementation LowerCase;
+  */
+
+  // Ejemplo: Read-Only Properties (UpperCase, LowerCase)
+  // Nota: UpperCase y LowerCase modifica el objeto actual sin importar que sea constante
+
+  std::string Value = "Denis West";
+  std::cout << "Value: " << Value->*LowerCase << std::endl; // Value: denis west
+  std::cout << "Value: " << Value->*UpperCase << std::endl; // Value: DENIS WEST
+
+  // La sentencia anterior actualiza el objeto real, en esta caso todas a mayúsculas
+  std::cout << "Value: " << Value << std::endl; // Value: DENIS WEST
+
+  std::cout << "Value: " << Value->*LowerCase->*Count  << " Letras" << std::endl; // Value: 10 Letras
+  std::cout << "Value: " << Value->*UpperCase->*Length << " Letras" << std::endl; // Value: 10 Letras
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /*
+    inline constexpr PropertyDetails::BooleanStringImplementation BooleanString;
+  */
+
+  // Ejemplo: Read-Only Properties (BooleanString)
+  // Referencia:
+  //  Línea 74: TEST(ExtensionMethodTest, BooleanStringPropertyExtension)
+  //  Archivo:  ExtensionMethodTests.cpp
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /*
+    template <std::ranges::range RangeType>
+    inline constexpr PropertyDetails::ToImplementation<RangeType> To;
+
+    template <std::ranges::range RangeType>
+    auto As();
+
+    template <typename FunctionType>
+    auto Select(FunctionType&& Selector);
+
+    template <typename FunctionType>
+    auto Map(FunctionType&& Function);
+
+    auto ToString();
+  */
+
+  // Ejemplo: Extension Methods (As, Select, Map, ToString)
+  // Referencia:
+  //  Línea 118: TEST(ExtensionMethodTest, MethodExtension)
+  //  Archivo:   ExtensionMethodTests.cpp
+}
 ```
