@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "ServiceLocator.hpp"
+#include "Cxx/ServiceLocator.hpp"
 
 #include <chrono>
 #include <string_view>

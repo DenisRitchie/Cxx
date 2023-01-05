@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "Generator.hpp"
-#include "ExtensionMethods.hpp"
-#include "Details/TypeTraits.hpp"
+#include "Cxx/Generator.hpp"
+#include "Cxx/ExtensionMethods.hpp"
+#include "Cxx/Details/TypeTraits.hpp"
 
 #include <iostream>
 #include <string>

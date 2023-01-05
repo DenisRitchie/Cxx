@@ -44,6 +44,7 @@ AttributeMacros:
 BinPackArguments: false
 BinPackParameters: false
 BitFieldColonSpacing: Both
+# BreakArrays: false # clang-format 16
 BreakBeforeBraces: Custom # Allman
 BraceWrapping:
   AfterCaseLabel:        true
@@ -115,12 +116,13 @@ IndentAccessModifiers: true # clang-format 13
 IndentCaseLabels: true
 IndentCaseBlocks: false
 IndentGotoLabels: true
-IndentPPDirectives: BeforeHash # AfterHash
+IndentPPDirectives: AfterHash # BeforeHash # AfterHash
 IndentExternBlock: AfterExternBlock
 IndentRequires: false
-# IndentRequiresClause: false # clang-format 15
+IndentRequiresClause: false # clang-format 15
 IndentWidth: 2
 IndentWrappedFunctionNames: false
+InsertBraces: false # clang-format 15
 InsertTrailingCommas: None
 KeepEmptyLinesAtTheStartOfBlocks: true
 LambdaBodyIndentation: Signature # clang-format 13
@@ -167,7 +169,9 @@ RawStringFormats:
 ReferenceAlignment: Pointer # clang-format 14
 ReflowComments: true
 RemoveBracesLLVM: false # clang-format 14
-# RequiresClausePosition: OwnLine # clang-format 15
+# RemoveSemicolon: false # clang-format 16
+RequiresClausePosition: OwnLine # clang-format 15
+# RequiresExpressionIndentation: Keyword # clang-format 16
 SeparateDefinitionBlocks: Always # clang-format 14
 ShortNamespaceLines: 1 # clang-format 14
 SortIncludes: Never

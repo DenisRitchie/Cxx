@@ -22,17 +22,20 @@
     "cmakeFormat.exePath": "",
     "cmake.generator": "Ninja",
     "cmake.useCMakePresets": "never",
+    "cmake.languageSupport.enableFileAPI": true,
     "testMate.cpp.test.executables": "{build,Build,BUILD,out,Out,OUT}/**/*{test,Test,TEST}*",
-    "C_Cpp.default.cStandard": "c17",
-    "C_Cpp.default.cppStandard": "c++23",
+    // "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    // "C_Cpp.default.cStandard": "c17",
+    // "C_Cpp.default.cppStandard": "c++23",
+    // "C_Cpp.default.intelliSenseMode": "windows-msvc-x64",
     "C_Cpp.errorSquiggles": "disabled",
-    "C_Cpp.vcpkg.enabled": false,
-    "C_Cpp.default.intelliSenseMode": "windows-msvc-x64",
     "C_Cpp.intelliSenseCacheSize": 1048576,
     "C_Cpp.intelliSenseMemoryLimit": 16384,
+    "C_Cpp.vcpkg.enabled": false,
     "files.encoding": "utf8",
     "files.insertFinalNewline": true,
     "files.maxMemoryForLargeFilesMB": 1048576,
+    "sonarlint.pathToCompileCommands": "${workspaceFolder}\\build\\compile_commands.json",
     "editor.tokenColorCustomizations": {
         "textMateRules": [
             {
@@ -56,11 +59,12 @@
         ]
     },
     "files.associations": {
+        "*.php": "php",
+        "*.rh": "cpp",
         "*.yml": "dockercompose",
         ".clang-tidy": "yaml",
         ".clang-format": "yaml",
         ".clangd": "yaml",
-        "*.php": "php",
         "functional": "cpp",
         "typeindex": "cpp",
         "type_traits": "cpp",
@@ -138,7 +142,12 @@
         "xtr1common": "cpp",
         "xtree": "cpp",
         "xutility": "cpp",
-        "*.rh": "cpp",
-        "coroutine": "cpp"
+        "coroutine": "cpp",
+        "version": "cpp",
+        "string_view": "cpp"
+    },
+    "C_Cpp.files.exclude": {
+        "**/.vscode": true,
+        "**/.vs": true
     }
 }

@@ -1,4 +1,4 @@
-#include "ServiceLocator.hpp"
+#include "Cxx/ServiceLocator.hpp"
 
 #include <atomic>
 #include <mutex>
@@ -9,7 +9,7 @@ namespace NativeDesignPatterns
   {
       static ServiceLocator& GetInstance()
       {
-        std::call_once(CreateFlag, [=] { Instance = std::make_unique<ServiceLocator>(); });
+        std::call_once(CreateFlag, [] { Instance = std::make_unique<ServiceLocator>(); });
         return *Instance;
       }
 
