@@ -28,12 +28,18 @@ add_library(Cxx::DesignPatterns ALIAS ${PROJECT_NAME})
 target_sources(${PROJECT_NAME}
     PUBLIC
         Includes/Cxx/CompilerFeature.hpp
+        Includes/Cxx/ContainerTraits.hpp
+        Includes/Cxx/DetectionIdiom.hpp
         Includes/Cxx/ExtensionMethods.hpp
         Includes/Cxx/Generator.hpp
+        Includes/Cxx/IteratorTraits.hpp
         Includes/Cxx/Optional.hpp
         Includes/Cxx/Reference.hpp
         Includes/Cxx/SemanticValue.hpp
         Includes/Cxx/TypeTraits.hpp
+        Includes/Cxx/Exceptions/IOException.hpp
+        Includes/Cxx/Exceptions/UnstableIteratorException.hpp
+        Includes/Cxx/DesignPatterns/OutputIteratorAdapter.hpp
         Includes/Cxx/DesignPatterns/ServiceLocator.hpp
         Sources/Cxx/DesignPatterns/ServiceLocator.cpp
 )

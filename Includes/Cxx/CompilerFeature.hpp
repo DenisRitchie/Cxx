@@ -425,8 +425,7 @@ namespace Cxx::FeatureTesting
       value.insert(4, 1, '-'); //~ 201603 -> 2016-03
     }
 
-    if ( (PrintOptions::supported_features and is_feature_supported(compiler_feature)) or
-         (PrintOptions::unsupported_features and not is_feature_supported(compiler_feature)) )
+    if ( (PrintOptions::supported_features and is_feature_supported(compiler_feature)) or (PrintOptions::unsupported_features and not is_feature_supported(compiler_feature)) )
     {
       std::cout << std::left << std::setw(max_name_length) << compiler_feature.Name << ' ' << value << '\n';
     }
@@ -455,14 +454,9 @@ namespace Cxx::FeatureTesting
 
     if ( PrintOptions::sort_by_date )
     {
-      std::sort(
-          std::begin(features),
-          std::end(features),                                        //
-          [](const CompilerFeature& lhs, const CompilerFeature& rhs) //
-          {                                                          //
-            return std::strcmp(lhs.Value, rhs.Value) < 0;
-          }
-      );
+      std::sort(std::begin(features), std::end(features), [](const CompilerFeature& lhs, const CompilerFeature& rhs) { //
+        return std::strcmp(lhs.Value, rhs.Value) < 0;
+      });
     }
 
     for ( const CompilerFeature& feature : features )

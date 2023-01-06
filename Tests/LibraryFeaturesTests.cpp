@@ -66,6 +66,6 @@ CONSTEXPR int BarFunction(const unsigned i)
 # define IF_CONSTEVAL
 #endif
 
-TEST(LibraryFeatures, LibraryFeatures)
+TEST(LibraryFeaturesTests, LibraryFeatures)
 {
 }

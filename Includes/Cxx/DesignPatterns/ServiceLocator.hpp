@@ -120,9 +120,7 @@ namespace Cxx::DesignPatterns
       {
         ((ServiceLocator::Value<typename Details::ServiceLocatorFactoryTraits<FactoryTypes>::ValueType> = std::move(std::invoke(FactoryTypes{}))), ...);
 
-        ((ServiceLocator::Value<typename Details::ServiceLocatorFactoryTraits<FactoryFunctions>::ValueType> =
-            std::move(std::invoke(std::forward<FactoryFunctions>(Factory)))),
-         ...);
+        ((ServiceLocator::Value<typename Details::ServiceLocatorFactoryTraits<FactoryFunctions>::ValueType> = std::move(std::invoke(std::forward<FactoryFunctions>(Factory)))), ...);
       }
 
     private:

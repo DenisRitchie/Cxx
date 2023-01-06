@@ -5,7 +5,7 @@
 
 using namespace Cxx::FeatureTesting;
 
-TEST(LanguageFeatures, LanguageFeatures)
+TEST(LanguageFeaturesTests, LanguageFeatures)
 {
   // clang-format off
 

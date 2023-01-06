@@ -74,7 +74,7 @@ BreakConstructorInitializersBeforeComma: false
 BreakConstructorInitializers: BeforeComma
 BreakAfterJavaFieldAnnotations: false
 BreakStringLiterals: true
-ColumnLimit: 160
+ColumnLimit: 300
 CommentPragmas:  '^ MAGUDALI pragma:'
 CompactNamespaces: false
 # ConstructorInitializerAllOnOneLineOrOnePerLine: false # deprecated: PackConstructorInitializers
