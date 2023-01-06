@@ -3,9 +3,8 @@
 
 #include <optional>
 #include <concepts>
-#include <type_traits>
 
-namespace NativeDesignPatterns
+namespace Cxx
 {
   template <typename Type>
   struct Optional : public std::optional<Type>
@@ -16,13 +15,20 @@ namespace NativeDesignPatterns
       using BaseType::operator=;
 
       template <typename Self, std::integral... Indexes>
-      constexpr auto&& operator[](this Self&& This, const Indexes... Index) noexcept(false)
+      constexpr auto&& operator[](this Self&& This, const Indexes... Index)
       {
-        return This->operator[](Index...);
+        if constexpr ( requires { This->operator[](Index...); } )
+        {
+          return This->operator[](Index...);
+        }
+        else
+        {
+          return This.operator[](Index...);
+        }
       }
 
       template <typename Self>
-      constexpr auto&& operator*(this Self&& This) noexcept(false)
+      constexpr auto&& operator*(this Self&& This)
       {
         if constexpr ( requires { *This.value(); } )
         {
@@ -43,7 +49,7 @@ namespace NativeDesignPatterns
       }
 
       template <typename Self>
-      constexpr auto&& operator->(this Self&& This) noexcept(false)
+      constexpr auto&& operator->(this Self&& This)
       {
         if constexpr ( requires { This.value().operator->(); } )
         {
@@ -55,6 +61,6 @@ namespace NativeDesignPatterns
         }
       }
   };
-} // namespace NativeDesignPatterns
+} // namespace Cxx
 
 #endif /* BEAE9345_441A_49A7_AB8A_28C3C1F463AD */

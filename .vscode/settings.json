@@ -144,7 +144,8 @@
         "xutility": "cpp",
         "coroutine": "cpp",
         "version": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "ranges": "cpp"
     },
     "C_Cpp.files.exclude": {
         "**/.vscode": true,

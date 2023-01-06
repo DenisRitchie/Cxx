@@ -2,7 +2,7 @@
 #define C35229B1_A65B_4639_97F8_E0C58134BB4F
 
 #include "Generator.hpp"
-#include "Details/TypeTraits.hpp"
+#include "TypeTraits.hpp"
 
 #include <string>
 #include <string_view>
@@ -10,24 +10,28 @@
 #include <locale>
 #include <utility>
 
-template <typename ValueType, typename ExtensionType>
-constexpr auto operator->*(ValueType&& Value, ExtensionType&& Extension) -> decltype(std::declval<ExtensionType>()(std::declval<ValueType>()))
+namespace Cxx
 {
-  return Extension(Value);
-}
+  template <typename ValueType, typename ExtensionType>
+  constexpr auto operator->*(ValueType&& Value, ExtensionType&& Extension) -> std::invoke_result_t<ExtensionType, ValueType>
+  {
+    return Extension(Value);
+  }
+} // namespace Cxx
 
-namespace NativeDesignPatterns::LINQ::QuerySyntax
+namespace Cxx::LINQ::QuerySyntax
 {
 
-} // namespace NativeDesignPatterns::LINQ::QuerySyntax
+} // namespace Cxx::LINQ::QuerySyntax
 
-namespace NativeDesignPatterns::LINQ::MethodSyntax
+namespace Cxx::LINQ::MethodSyntax
 {
   namespace PropertyDetails
   {
     template <std::ranges::range RangeType>
     struct ToImplementation
     {
+        // TODO: Crear un iterador personalizado para los distintos métodos de inserción
         constexpr auto operator()(auto&& Value) const -> RangeType
         {
           RangeType Result;
@@ -74,8 +78,9 @@ namespace NativeDesignPatterns::LINQ::MethodSyntax
     {
         // clang-format off
 
+        // TODO: Crear implementación para obtener de diferentes maneras la cantidad de items de un array
         template <typename Type>
-        requires requires(NativeDesignPatterns::Details::RemoveAllSymbols<Type> Value)
+        requires requires(Cxx::Details::RemoveAllSymbols<Type> Value)
         {
           { Value.size() };
         }
@@ -97,11 +102,11 @@ namespace NativeDesignPatterns::LINQ::MethodSyntax
         template <typename Type>
         constexpr std::string_view operator()(Type&& Value) const noexcept
         {
-          if constexpr ( std::is_pointer_v<std::remove_cvref_t<Type>> and IsAnyOf<NativeDesignPatterns::Details::RemoveAllSymbols<Type>, char, int8_t, uint8_t, wchar_t, char8_t, char16_t, char32_t> )
+          if constexpr ( std::is_pointer_v<std::remove_cvref_t<Type>> and IsAnyOf<Cxx::Details::RemoveAllSymbols<Type>, char, int8_t, uint8_t, wchar_t, char8_t, char16_t, char32_t> )
           {
             return BooleanString(*Value != 0);
           }
-          else if constexpr ( std::is_array_v<std::remove_cvref_t<Type>> and IsAnyOf<NativeDesignPatterns::Details::RemoveAllSymbols<Type>, char, int8_t, uint8_t, wchar_t, char8_t, char16_t, char32_t> )
+          else if constexpr ( std::is_array_v<std::remove_cvref_t<Type>> and IsAnyOf<Cxx::Details::RemoveAllSymbols<Type>, char, int8_t, uint8_t, wchar_t, char8_t, char16_t, char32_t> )
           {
             return BooleanString(Value[0] != 0);
           }
@@ -217,6 +222,6 @@ namespace NativeDesignPatterns::LINQ::MethodSyntax
     };
   }
 
-} // namespace NativeDesignPatterns::LINQ::MethodSyntax
+} // namespace Cxx::LINQ::MethodSyntax
 
 #endif /* C35229B1_A65B_4639_97F8_E0C58134BB4F */

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "Cxx/ServiceLocator.hpp"
+#include "Cxx/DesignPatterns/ServiceLocator.hpp"
 
 #include <chrono>
 #include <string_view>
@@ -9,7 +9,8 @@
 #include <memory>
 
 using namespace std;
-using namespace NativeDesignPatterns;
+using namespace Cxx;
+using namespace Cxx::DesignPatterns;
 
 SemanticValue<string> StringFactory()
 {
@@ -164,7 +165,7 @@ TEST(ServiceLocatorTest, GlobalService)
   EXPECT_EQ(ServiceLocator::Default().Resolve<IService>().operator->().operator->()->GetValue(), "Constructor Arguments Example"sv);
 
   ServiceLocator::Default().InvokeFactory<PersonFactory, ServiceFactory>(
-      StringFactory, Int32Factory, []() -> SemanticValue<std::string_view> { return "Text"sv; }
+    StringFactory, Int32Factory, []() -> SemanticValue<std::string_view> { return "Text"sv; }
   );
   ServiceLocator::Default().InvokeFactory([]() -> SemanticValue<std::vector<int32_t>> { return std::vector{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }; });
 

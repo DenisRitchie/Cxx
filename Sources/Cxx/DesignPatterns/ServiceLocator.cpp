@@ -1,9 +1,9 @@
-#include "Cxx/ServiceLocator.hpp"
+#include "Cxx/DesignPatterns/ServiceLocator.hpp"
 
 #include <atomic>
 #include <mutex>
 
-namespace NativeDesignPatterns
+namespace Cxx::DesignPatterns
 {
   struct ThreadSafeServiceLocator
   {
@@ -24,4 +24,4 @@ namespace NativeDesignPatterns
 
   std::unique_ptr<ServiceLocator> ThreadSafeServiceLocator::Instance;
   std::once_flag                  ThreadSafeServiceLocator::CreateFlag;
-} // namespace NativeDesignPatterns
+} // namespace Cxx::DesignPatterns

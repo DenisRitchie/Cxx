@@ -2,9 +2,8 @@
 #define D3B300A4_FC34_4A64_BEC3_75BB932C037F
 
 #include <any>
-#include <type_traits>
 
-namespace NativeDesignPatterns
+namespace Cxx
 {
   template <typename BaseType>
   class SemanticValue
@@ -72,7 +71,7 @@ namespace NativeDesignPatterns
 
       template <typename Self>
       inline constexpr auto operator*(this Self&& self) noexcept
-          -> std::conditional_t<std::is_const_v<std::remove_reference_t<Self>>, const_reference, reference>
+        -> std::conditional_t<std::is_const_v<std::remove_reference_t<Self>>, const_reference, reference>
       {
         return self.getter(const_cast<std::any&>(self.object));
       }
@@ -94,6 +93,6 @@ namespace NativeDesignPatterns
         return std::any_cast<DerivedType&>(object);
       }
   };
-} // namespace NativeDesignPatterns
+} // namespace Cxx
 
 #endif /* D3B300A4_FC34_4A64_BEC3_75BB932C037F */

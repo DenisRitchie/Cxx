@@ -3,7 +3,7 @@
 
 #include "Cxx/Generator.hpp"
 #include "Cxx/ExtensionMethods.hpp"
-#include "Cxx/Details/TypeTraits.hpp"
+#include "Cxx/TypeTraits.hpp"
 
 #include <iostream>
 #include <string>
@@ -24,8 +24,8 @@ using std::literals::operator""s;
 using std::literals::operator""sv;
 #pragma warning(pop)
 
-using namespace NativeDesignPatterns;
-using namespace NativeDesignPatterns::LINQ::MethodSyntax;
+using namespace Cxx;
+using namespace Cxx::LINQ::MethodSyntax;
 
 auto Append(auto&& Value) noexcept
 {

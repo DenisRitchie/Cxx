@@ -79,7 +79,7 @@ CommentPragmas:  '^ MAGUDALI pragma:'
 CompactNamespaces: false
 # ConstructorInitializerAllOnOneLineOrOnePerLine: false # deprecated: PackConstructorInitializers
 ConstructorInitializerIndentWidth: 2
-ContinuationIndentWidth: 4
+ContinuationIndentWidth: 2
 Cpp11BracedListStyle: false
 DeriveLineEnding: true
 DerivePointerAlignment: false

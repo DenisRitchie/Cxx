@@ -6,12 +6,12 @@
 #include <stdexcept>
 #include <variant>
 
-namespace NativeDesignPatterns
-{
-  // https://github.com/lewissbaker/cppcoro
-  // https://en.cppreference.com/w/cpp/language/coroutines
-  // https://learn.microsoft.com/en-us/archive/msdn-magazine/2017/october/c-from-algorithms-to-coroutines-in-c
+// https://github.com/lewissbaker/cppcoro
+// https://en.cppreference.com/w/cpp/language/coroutines
+// https://learn.microsoft.com/en-us/archive/msdn-magazine/2017/october/c-from-algorithms-to-coroutines-in-c
 
+namespace Cxx
+{
   template <typename T>
   struct Generator
   {
@@ -32,7 +32,7 @@ namespace NativeDesignPatterns
             return {};
           }
 
-          std::suspend_always yield_value(T const& other)
+          std::suspend_always yield_value(const T& other)
           {
             value = std::addressof(other);
             return {};
@@ -106,10 +106,11 @@ namespace NativeDesignPatterns
       struct iterator
       {
           using iterator_category = std::input_iterator_tag;
+          using iterator_concept  = std::forward_iterator_tag;
           using value_type        = T;
           using difference_type   = ptrdiff_t;
-          using pointer           = T const*;
-          using reference         = T const&;
+          using pointer           = const T*;
+          using reference         = const T&;
 
           bool operator==(const iterator& other) const
           {
@@ -137,12 +138,12 @@ namespace NativeDesignPatterns
             return *this;
           }
 
-          T const& operator*() const
+          const T& operator*() const
           {
             return *std::get<0>(handle.promise().value);
           }
 
-          T const* operator->() const
+          const T* operator->() const
           {
             return std::addressof(operator*());
           }
@@ -174,6 +175,6 @@ namespace NativeDesignPatterns
       }
   };
 
-} // namespace NativeDesignPatterns
+} // namespace Cxx
 
 #endif /* AA77ADD6_B5B4_40A9_9DCB_EBBAC4AC5AB2 */

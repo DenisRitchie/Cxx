@@ -3,10 +3,7 @@
 
 #include "SemanticValue.hpp"
 
-#include <type_traits>
-#include <concepts>
-
-namespace NativeDesignPatterns
+namespace Cxx
 {
   namespace Details
   {
@@ -76,20 +73,18 @@ namespace NativeDesignPatterns
     template <typename FactoryType>
     requires requires(const FactoryType Factory)
     {
-      { Factory() } -> std::same_as<SemanticValue<typename TemplateTraits<decltype(Factory())>::ElementType>>;
+      { std::invoke(Factory) } -> std::same_as<SemanticValue<typename TemplateTraits<std::invoke_result_t<FactoryType>>::ElementType>>;
     }
     struct ServiceLocatorFactoryTraits
     {
-        inline static constexpr bool IsDefaultConstructible = std::is_default_constructible_v<FactoryType>;
-
-        using ReturnType        = decltype(std::declval<FactoryType>()());
-        using SemanticValueType = decltype(std::declval<FactoryType>()());
+        using ReturnType        = std::invoke_result_t<FactoryType>;
+        using SemanticValueType = std::invoke_result_t<FactoryType>;
         using ValueType         = typename TemplateTraits<SemanticValueType>::ElementType;
         using ElementType       = typename TemplateTraits<SemanticValueType>::ElementType;
     };
 
     // clang-format on
   } // namespace Details
-} // namespace NativeDesignPatterns
+} // namespace Cxx
 
 #endif /* EDE2117E_A7D9_4EB3_892C_7B76526D6A96 */
