@@ -17,14 +17,7 @@ namespace Cxx
       template <typename Self, std::integral... Indexes>
       constexpr auto&& operator[](this Self&& This, const Indexes... Index)
       {
-        if constexpr ( requires { This->operator[](Index...); } )
-        {
-          return This->operator[](Index...);
-        }
-        else
-        {
-          return This.operator[](Index...);
-        }
+        return This.operator[](Index...);
       }
 
       template <typename Self>

@@ -46,8 +46,81 @@ TEST(DetectionIdiomTests, DetectionIdiom)
   EXPECT_TRUE((Cxx::DetectionIdiom::IsDetectedConvertibleV<char32_t, ArchetypalAlias::ContainerValueType, std::string_view>));
 }
 
+namespace std
+{
+  // DetectionIdiomTests - ContainerTraits
+
+  template <typename Container>
+  bool operator==(const back_insert_iterator<Container>&, const back_insert_iterator<Container>&)
+  {
+    return true;
+  }
+
+  // DetectionIdiomTests - ContainerTraits
+
+  template <typename Container>
+  bool operator==(const back_insert_iterator<Container>&, default_sentinel_t)
+  {
+    return true;
+  }
+
+  // DetectionIdiomTests - ContainerTraits
+
+  template <typename Container>
+  bool operator==(default_sentinel_t, const back_insert_iterator<Container>&)
+  {
+    return true;
+  }
+} // namespace std
+
 TEST(DetectionIdiomTests, ContainerTraits)
 {
+  EXPECT_FALSE((Cxx::Concepts::Container<int32_t>));
+  EXPECT_FALSE((Cxx::Concepts::Container<int32_t*>));
+  EXPECT_TRUE((Cxx::Concepts::Container<std::string>));
+  EXPECT_TRUE((Cxx::Concepts::Container<std::string_view>));
+  EXPECT_TRUE((Cxx::Concepts::Container<std::deque<int32_t>>));
+  EXPECT_TRUE((Cxx::Concepts::Container<std::list<int32_t>>));
+  EXPECT_TRUE((Cxx::Concepts::Container<std::forward_list<int32_t>>));
+  EXPECT_TRUE((Cxx::Concepts::Container<std::map<int32_t, int32_t>>));
+  EXPECT_TRUE((Cxx::Concepts::Container<std::array<int32_t, 1>>));
+  EXPECT_TRUE((Cxx::Concepts::OutputContainer<std::vector<int32_t>, int32_t>));
+  EXPECT_TRUE((Cxx::Concepts::InputContainer<std::vector<int32_t>>));
+  EXPECT_TRUE((Cxx::Concepts::ForwardContainer<std::vector<int32_t>>));
+  EXPECT_TRUE((Cxx::Concepts::BidirectionalContainer<std::vector<int32_t>>));
+  EXPECT_TRUE((Cxx::Concepts::RandomAccessContainer<std::vector<int32_t>>));
+  EXPECT_TRUE((Cxx::Concepts::ContiguousContainer<std::vector<int32_t>>));
+
+  struct OutputContainer
+  {
+      using value_type      = Cxx::Traits::ContainerTraits<std::vector<int32_t>>::value_type;
+      using reference       = Cxx::Traits::ContainerTraits<std::vector<int32_t>>::reference;
+      using const_reference = Cxx::Traits::ContainerTraits<std::vector<int32_t>>::const_reference;
+      using difference_type = Cxx::Traits::ContainerTraits<std::vector<int32_t>>::difference_type;
+      using size_type       = Cxx::Traits::ContainerTraits<std::vector<int32_t>>::size_type;
+      using iterator        = std::back_insert_iterator<std::vector<int32_t>>;
+      using const_iterator  = std::back_insert_iterator<std::vector<int32_t>>;
+
+      iterator begin()
+      {
+        return std::back_inserter(Values);
+      }
+
+      std::default_sentinel_t end()
+      {
+        return std::default_sentinel;
+      }
+
+      std::vector<int32_t> Values;
+  };
+
+  EXPECT_TRUE((Cxx::Concepts::Container<OutputContainer>));
+  EXPECT_TRUE((Cxx::Concepts::OutputContainer<OutputContainer, int32_t>));
+  EXPECT_FALSE((Cxx::Concepts::InputContainer<OutputContainer>));
+  EXPECT_FALSE((Cxx::Concepts::ForwardContainer<OutputContainer>));
+  EXPECT_FALSE((Cxx::Concepts::BidirectionalContainer<OutputContainer>));
+  EXPECT_FALSE((Cxx::Concepts::RandomAccessContainer<OutputContainer>));
+  EXPECT_FALSE((Cxx::Concepts::ContiguousContainer<OutputContainer>));
 }
 
 TEST(DetectionIdiomTests, IteratorTraits)
