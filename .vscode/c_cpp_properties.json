@@ -29,7 +29,6 @@
                 "/std:c++latest",
                 "/Zc:__cplusplus"
             ],
-            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
             "configurationProvider": "ms-vscode.cmake-tools",
             "intelliSenseMode": "windows-msvc-x64",
             "windowsSdkVersion": "10.0.22621.0"

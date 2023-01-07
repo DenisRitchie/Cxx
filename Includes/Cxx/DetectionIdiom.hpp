@@ -1,7 +1,13 @@
+// https://benjaminbrock.net/blog/detection_idiom.php
+// https://blog.tartanllama.xyz/detection-idiom/
+// https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4436.pdf
+// https://open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4502.pdf
+//
+
 #ifndef F82E2413_03CB_430C_91DF_3D3AA19163D9
 #define F82E2413_03CB_430C_91DF_3D3AA19163D9
 
-#include <type_traits>
+#include <concepts>
 
 namespace Cxx::DetectionIdiom
 {
@@ -23,7 +29,7 @@ namespace Cxx::DetectionIdiom
 # pragma GCC diagnostic pop
 #endif
 
-  namespace Detail
+  namespace Details
   {
     template <typename Default, typename AlwaysVoid, template <typename...> class Trait, typename... Args>
     struct Detector
@@ -38,16 +44,16 @@ namespace Cxx::DetectionIdiom
         using ValueType = std::true_type;
         using Type      = Trait<Args...>;
     };
-  } // namespace Detail
+  } // namespace Details
 
   template <template <typename...> class Trait, typename... Args>
-  using IsDetected = typename Detail::Detector<Nonesuch, void, Trait, Args...>::ValueType;
+  using IsDetected = typename Details::Detector<Nonesuch, void, Trait, Args...>::ValueType;
 
   template <template <typename...> class Trait, typename... Args>
-  using DetectedType = typename Detail::Detector<Nonesuch, void, Trait, Args...>::Type;
+  using DetectedType = typename Details::Detector<Nonesuch, void, Trait, Args...>::Type;
 
   template <typename Default, template <typename...> class Trait, typename... Args>
-  using DetectedOr = Detail::Detector<Default, void, Trait, Args...>;
+  using DetectedOr = Details::Detector<Default, void, Trait, Args...>;
 
   template <template <class...> class Trait, class... Args>
   inline constexpr bool IsDetectedV = IsDetected<Trait, Args...>::value;
