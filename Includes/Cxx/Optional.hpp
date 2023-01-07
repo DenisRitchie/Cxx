@@ -15,13 +15,20 @@ namespace Cxx
       using BaseType::operator=;
 
       template <typename Self, std::integral... Indexes>
-      constexpr auto&& operator[](this Self&& This, const Indexes... Index)
+      constexpr decltype(auto) operator[](this Self&& This, const Indexes... Index)
       {
-        return This.operator[](Index...);
+        if constexpr ( requires { This->operator[](Index...); } )
+        {
+          return This->operator[](Index...);
+        }
+        else
+        {
+          return This.operator*().operator[](Index...);
+        }
       }
 
       template <typename Self>
-      constexpr auto&& operator*(this Self&& This)
+      constexpr decltype(auto) operator*(this Self&& This)
       {
         if constexpr ( requires { *This.value(); } )
         {
@@ -35,14 +42,18 @@ namespace Cxx
         {
           return This.value().get();
         }
+        else if constexpr ( requires { This->operator*(); } )
+        {
+          return This->operator*();
+        }
         else
         {
-          return This.value();
+          return This.BaseType::operator*();
         }
       }
 
       template <typename Self>
-      constexpr auto&& operator->(this Self&& This)
+      constexpr decltype(auto) operator->(this Self&& This)
       {
         if constexpr ( requires { This.value().operator->(); } )
         {
