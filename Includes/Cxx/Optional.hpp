@@ -4,6 +4,8 @@
 #include <optional>
 #include <concepts>
 
+#include "Platform.hpp"
+
 namespace Cxx
 {
   template <typename Type>
@@ -14,6 +16,7 @@ namespace Cxx
       using BaseType::optional;
       using BaseType::operator=;
 
+#if defined(__cpp_explicit_this_parameter) and defined(__cpp_multidimensional_subscript)
       template <typename Self, std::integral... Indexes>
       constexpr decltype(auto) operator[](this Self&& This, const Indexes... Index)
       {
@@ -27,6 +30,9 @@ namespace Cxx
         }
       }
 
+#endif
+
+#ifdef __cpp_explicit_this_parameter
       template <typename Self>
       constexpr decltype(auto) operator*(this Self&& This)
       {
@@ -52,6 +58,9 @@ namespace Cxx
         }
       }
 
+#endif
+
+#ifdef __cpp_explicit_this_parameter
       template <typename Self>
       constexpr decltype(auto) operator->(this Self&& This)
       {
@@ -64,6 +73,7 @@ namespace Cxx
           return This.BaseType::operator->();
         }
       }
+#endif
   };
 } // namespace Cxx
 

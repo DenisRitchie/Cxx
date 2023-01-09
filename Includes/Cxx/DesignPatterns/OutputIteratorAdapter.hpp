@@ -1,26 +1,33 @@
 #ifndef C1FFA0CD_B02C_44A3_8388_648C125FE042
 #define C1FFA0CD_B02C_44A3_8388_648C125FE042
 
-#include <concepts>
-#include <functional>
-
-#include "Cxx/IteratorTraits.hpp"
+#include "Cxx/FunctionTraits.hpp"
 
 namespace Cxx::DesignPatterns
 {
-  template <typename Function>
+  namespace Details
+  {
+    // clang-format off
+
+    template <typename Function>
+    concept CallableContainer = std::is_invocable_v<Function> and Traits::FunctionTraits<Function>::ArgumentCount == Traits::NumberOfArguments<1>;
+
+    // clang-format on
+  } // namespace Details
+
+  template <Details::CallableContainer CallableContainer>
   class OutputIteratorAdapter
   {
     public:
-      using ContainerType     = Function;
-      using IteratorCategory  = std::output_iterator_tag;
-      using IteratorConcept   = std::output_iterator_tag;
-      using ValueType         = DetectionIdiom::Traits::IteratorTraits<ContainerType>::ValueTypeOrDefault;
-      using Pointer           = DetectionIdiom::Traits::IteratorTraits<ContainerType>::PointerOrDefault;
-      using ConstPointer      = DetectionIdiom::Traits::IteratorTraits<ContainerType>::ConstPointerOrDefault;
-      using Reference         = DetectionIdiom::Traits::IteratorTraits<ContainerType>::ReferenceOrDefault;
-      using ConstReference    = DetectionIdiom::Traits::IteratorTraits<ContainerType>::ConstReferenceOrDefault;
-      using DifferenceType    = DetectionIdiom::Traits::IteratorTraits<ContainerType>::DifferenceTypeOrDefault;
+      using ContainerType    = CallableContainer;
+      using IteratorCategory = std::output_iterator_tag;
+      using IteratorConcept  = std::output_iterator_tag;
+      using ValueType        = Traits::FunctionTraits<ContainerType>::Argument<0>;
+      using Pointer          = ValueType*;
+      using ConstPointer     = const ValueType*;
+      using Reference        = ValueType&;
+      using ConstReference   = const ValueType&;
+      using DifferenceType   = std::ptrdiff_t;
 
       using container_type    = ContainerType;
       using iterator_category = IteratorCategory;
@@ -32,39 +39,34 @@ namespace Cxx::DesignPatterns
       using const_reference   = ConstReference;
       using difference_type   = DifferenceType;
 
-      OutputIteratorAdapter& operator*() noexcept
+      // clang-format off
+
+      OutputIteratorAdapter& operator*() noexcept { return *this; }
+      OutputIteratorAdapter& operator++() noexcept { return *this; }
+      OutputIteratorAdapter& operator++(int32_t) noexcept { return *this; }
+
+      // clang-format on
+
+      OutputIteratorAdapter(ContainerType&& callback) noexcept
+        : Callback{ std::forward<ContainerType>(callback) }
       {
+      }
+
+      OutputIteratorAdapter& operator=(const ValueType& value)
+      {
+        Callback(value);
         return *this;
       }
 
-      OutputIteratorAdapter& operator++() noexcept
+      OutputIteratorAdapter& operator=(ValueType&& value)
       {
-        return *this;
-      }
-
-      OutputIteratorAdapter& operator++(int32_t) noexcept
-      {
-        return *this;
-      }
-
-      OutputIteratorAdapter(Function&& function) noexcept
-        : m_Function{ std::forward<Function>(function) }
-      {
-      }
-
-      template <typename Value>
-      OutputIteratorAdapter& operator=(Value&& value)
-      {
-        m_Function(std::forward<Value>(value));
+        Callback(std::move(value));
         return *this;
       }
 
     private:
-      Function m_Function;
+      ContainerType Callback;
   };
-
-  template <typename Function>
-  OutputIteratorAdapter(Function&& function) -> OutputIteratorAdapter<Function>;
 } // namespace Cxx::DesignPatterns
 
 #endif /* C1FFA0CD_B02C_44A3_8388_648C125FE042 */

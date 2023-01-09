@@ -13,6 +13,26 @@
 
 namespace Cxx::DesignPatterns
 {
+  namespace Details
+  {
+    // clang-format off
+
+    template <typename FactoryType>
+    requires requires(const FactoryType Factory)
+    {
+      { std::invoke(Factory) } -> std::same_as<SemanticValue<typename Traits::TemplateTraits<std::invoke_result_t<FactoryType>>::ElementType>>;
+    }
+    struct ServiceLocatorFactoryTraits
+    {
+        using ReturnType        = std::invoke_result_t<FactoryType>;
+        using SemanticValueType = std::invoke_result_t<FactoryType>;
+        using ValueType         = typename Traits::TemplateTraits<SemanticValueType>::ElementType;
+        using ElementType       = typename Traits::TemplateTraits<SemanticValueType>::ElementType;
+    };
+
+    // clang-format on
+  } // namespace Details
+
   class ServiceLocator
   {
     public:
@@ -26,7 +46,7 @@ namespace Cxx::DesignPatterns
       static ServiceLocator& Default() noexcept;
 
       template <typename... FactoryTypes, typename... FactoryFunctions>
-      requires(std::same_as<SemanticValue<typename TemplateTraits<std::invoke_result_t<FactoryTypes>>::ElementType>, std::invoke_result_t<FactoryTypes>> && ...)
+      requires(std::same_as<SemanticValue<typename Traits::TemplateTraits<std::invoke_result_t<FactoryTypes>>::ElementType>, std::invoke_result_t<FactoryTypes>> && ...)
       ServiceLocator& InvokeFactory(FactoryFunctions&&... Factory)
       {
         (m_Services.insert_or_assign(
@@ -115,7 +135,7 @@ namespace Cxx::DesignPatterns
       inline static Optional<SemanticValue<ServiceType>> Value;
 
       template <typename... FactoryTypes, typename... FactoryFunctions>
-      requires(std::same_as<SemanticValue<typename TemplateTraits<std::invoke_result_t<FactoryTypes>>::ElementType>, std::invoke_result_t<FactoryTypes>> && ...)
+      requires(std::same_as<SemanticValue<typename Traits::TemplateTraits<std::invoke_result_t<FactoryTypes>>::ElementType>, std::invoke_result_t<FactoryTypes>> && ...)
       inline static void UseFactory(FactoryFunctions&&... Factory)
       {
         ((ServiceLocator::Value<typename Details::ServiceLocatorFactoryTraits<FactoryTypes>::ValueType> = std::move(std::invoke(FactoryTypes{}))), ...);

@@ -35,9 +35,11 @@ target_sources(${PROJECT_NAME}
         Includes/Cxx/ContainerTraits.hpp
         Includes/Cxx/DetectionIdiom.hpp
         Includes/Cxx/ExtensionMethods.hpp
+        Includes/Cxx/FunctionTraits.hpp
         Includes/Cxx/Generator.hpp
         Includes/Cxx/IteratorTraits.hpp
         Includes/Cxx/Optional.hpp
+        Includes/Cxx/Platform.hpp
         Includes/Cxx/Reference.hpp
         Includes/Cxx/SemanticValue.hpp
         Includes/Cxx/TypeTraits.hpp
@@ -46,7 +48,7 @@ target_sources(${PROJECT_NAME}
         Includes/Cxx/DesignPatterns/OutputIteratorAdapter.hpp
         Includes/Cxx/DesignPatterns/ServiceLocator.hpp
         Includes/Cxx/String.hpp
-    
+
     PUBLIC
         Sources/Cxx/DesignPatterns/ServiceLocator.cpp
         Sources/Cxx/String.cpp

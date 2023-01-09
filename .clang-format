@@ -17,10 +17,10 @@ AccessModifierOffset: -2
 AlignAfterOpenBracket: BlockIndent # AlwaysBreak # Align
 AlignArrayOfStructures: Right # clang-format 13
 AlignConsecutiveMacros: AcrossEmptyLinesAndComments
-AlignConsecutiveAssignments: AcrossEmptyLinesAndComments
+AlignConsecutiveAssignments: AcrossComments # AcrossEmptyLinesAndComments # AlignCompound # PadOperators
 AlignConsecutiveBitFields: AcrossEmptyLinesAndComments
-AlignConsecutiveDeclarations: AcrossEmptyLinesAndComments
-AlignEscapedNewlines: Right
+AlignConsecutiveDeclarations: AcrossEmptyLinesAndComments # AcrossComments # AcrossEmptyLines
+AlignEscapedNewlines: Left # Right
 AlignOperands: AlignAfterOperator
 AlignTrailingComments: true
 AllowAllArgumentsOnNextLine: true

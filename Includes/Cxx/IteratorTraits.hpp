@@ -69,8 +69,6 @@ namespace Cxx::DetectionIdiom::Traits
   template <typename Iterator>
   struct IteratorTraits
   {
-      // clang-format off
-
       using ValueTypeOrDefault        = DetectedOrType<ArchetypalAlias::DefaultTrait<void>, ArchetypalAlias::ValueTypeTrait, Iterator>;
       using ContainerTypeOrDefault    = DetectedOrType<ArchetypalAlias::DefaultTrait<void>, ArchetypalAlias::ContainerTypeTrait, Iterator>;
       using IteratorCategoryOrDefault = DetectedOrType<ArchetypalAlias::DefaultTrait<Details::DefaultIteratorTag<Iterator>>, ArchetypalAlias::IteratorCategoryTrait, Iterator>;
@@ -80,8 +78,6 @@ namespace Cxx::DetectionIdiom::Traits
       using ReferenceOrDefault        = DetectedOrType<ArchetypalAlias::DefaultTrait<std::add_lvalue_reference_t<ValueTypeOrDefault>>, ArchetypalAlias::ReferenceTrait, Iterator>;
       using ConstReferenceOrDefault   = DetectedOrType<ArchetypalAlias::DefaultTrait<std::conditional_t<std::is_void_v<ReferenceOrDefault>, void, std::add_lvalue_reference_t<std::add_const_t<ValueTypeOrDefault>>>>, ArchetypalAlias::ConstReferenceTrait, Iterator>;
       using DifferenceTypeOrDefault   = DetectedOrType<ArchetypalAlias::DefaultTrait<std::ptrdiff_t>, ArchetypalAlias::DifferenceTypeTrait, Iterator>;
-
-      // clang-format on
 
       inline static constexpr bool HasValueType        = IsDetectedV<ArchetypalAlias::ValueTypeTrait, Iterator>;
       inline static constexpr bool HasContainerType    = IsDetectedV<ArchetypalAlias::ContainerTypeTrait, Iterator>;

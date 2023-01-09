@@ -70,7 +70,7 @@ namespace Cxx
       ~SemanticValue() noexcept = default;
 
       template <typename Self>
-      inline constexpr auto operator*(this Self&& self) noexcept
+      inline constexpr auto operator*(this Self&& self) noexcept //
         -> std::conditional_t<std::is_const_v<std::remove_reference_t<Self>>, const_reference, reference>
       {
         return self.getter(const_cast<std::any&>(self.object));
@@ -78,7 +78,7 @@ namespace Cxx
 
       template <typename Self>
       inline constexpr auto operator->(this Self&& self) noexcept //
-          -> std::conditional_t<std::is_const_v<std::remove_reference_t<Self>>, const_pointer, pointer>
+        -> std::conditional_t<std::is_const_v<std::remove_reference_t<Self>>, const_pointer, pointer>
       {
         return &self.getter(const_cast<std::any&>(self.object));
       }

@@ -1,14 +1,14 @@
 #ifndef C35229B1_A65B_4639_97F8_E0C58134BB4F
 #define C35229B1_A65B_4639_97F8_E0C58134BB4F
 
-#include "Generator.hpp"
-#include "TypeTraits.hpp"
-
 #include <string>
 #include <string_view>
 #include <iterator>
 #include <locale>
 #include <utility>
+
+#include "Generator.hpp"
+#include "TypeTraits.hpp"
 
 namespace Cxx
 {
@@ -80,7 +80,7 @@ namespace Cxx::LINQ::MethodSyntax
 
         // TODO: Crear implementación para obtener de diferentes maneras la cantidad de items de un array
         template <typename Type>
-        requires requires(Cxx::Details::RemoveAllSymbols<Type> Value)
+        requires requires(Cxx::Traits::RemoveAllSymbols<Type> Value)
         {
           { Value.size() };
         }
@@ -102,11 +102,11 @@ namespace Cxx::LINQ::MethodSyntax
         template <typename Type>
         constexpr std::string_view operator()(Type&& Value) const noexcept
         {
-          if constexpr ( std::is_pointer_v<std::remove_cvref_t<Type>> and IsAnyOf<Cxx::Details::RemoveAllSymbols<Type>, char, int8_t, uint8_t, wchar_t, char8_t, char16_t, char32_t> )
+          if constexpr ( std::is_pointer_v<std::remove_cvref_t<Type>> and Traits::IsAnyOf<Cxx::Traits::RemoveAllSymbols<Type>, char, int8_t, uint8_t, wchar_t, char8_t, char16_t, char32_t> )
           {
             return BooleanString(*Value != 0);
           }
-          else if constexpr ( std::is_array_v<std::remove_cvref_t<Type>> and IsAnyOf<Cxx::Details::RemoveAllSymbols<Type>, char, int8_t, uint8_t, wchar_t, char8_t, char16_t, char32_t> )
+          else if constexpr ( std::is_array_v<std::remove_cvref_t<Type>> and Traits::IsAnyOf<Cxx::Traits::RemoveAllSymbols<Type>, char, int8_t, uint8_t, wchar_t, char8_t, char16_t, char32_t> )
           {
             return BooleanString(Value[0] != 0);
           }
@@ -186,7 +186,7 @@ namespace Cxx::LINQ::MethodSyntax
     return [&]<std::ranges::range RangeType>(RangeType&& Values) // clang-format off
     -> Generator<decltype(
         std::declval<FunctionType>()(
-          std::declval<typename TemplateTraits<RangeType>::ElementType>()
+          std::declval<typename Traits::TemplateTraits<RangeType>::ElementType>()
         )
        )> // clang-format on
     {

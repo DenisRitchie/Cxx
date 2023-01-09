@@ -1,11 +1,11 @@
 #ifndef EDE2117E_A7D9_4EB3_892C_7B76526D6A96
 #define EDE2117E_A7D9_4EB3_892C_7B76526D6A96
 
-#include "SemanticValue.hpp"
+#include <concepts>
 
-namespace Cxx
+namespace Cxx::Traits
 {
-  namespace Details
+  namespace TypeParameters::inline V1
   {
     template <typename Type>
     struct GetFirstParameter;
@@ -48,43 +48,107 @@ namespace Cxx
     {
         using Type = typename TemplateType::template Rebind<OtherType>;
     };
+  } // namespace TypeParameters::inline V1
 
-    template <typename Type>
-    using RemoveAllSymbols = std::remove_cv_t<std::remove_all_extents_t<std::remove_pointer_t<std::remove_cvref_t<Type>>>>;
-  } // namespace Details
+  namespace TypeParameters::inline V2
+  {
+    template <typename... Types>
+    struct Arguments;
+
+    template <size_t Index, typename ArgumentPack>
+    struct ArgumentIndex;
+
+    template <size_t Index>
+    struct ArgumentIndex<Index, Arguments<>>
+    {
+        static_assert(AlwaysFalse<std::integral_constant<size_t, Index>>, "Argument index out of bounds");
+    };
+
+    template <typename FirstType, typename... RestType>
+    struct ArgumentIndex<0, Arguments<FirstType, RestType...>>
+    {
+        using ArgumentType = FirstType;
+    };
+
+    template <size_t Index, typename FirstType, typename... RestType>
+    struct ArgumentIndex<Index, Arguments<FirstType, RestType...>> : ArgumentIndex<Index - 1, Arguments<RestType...>>
+    {
+    }; // Recursive ArgumentIndex Definition
+
+    template <size_t Index, typename ArgumentPack>
+    using ArgumentIndexType = typename ArgumentIndex<Index, ArgumentPack>::ArgumentType;
+
+    template <typename... Types>
+    struct Arguments
+    {
+        inline static constexpr size_t ArgumentCount = sizeof...(Types);
+
+        template <size_t Index>
+        using ArgumentIndex = ArgumentIndexType<Index, Arguments<Types...>>;
+    };
+
+    namespace Details
+    {
+      template <typename TemplateType>
+      struct TemplateArguments
+      {
+          using Arguments = V2::Arguments<>;
+      };
+
+      template <template <typename...> class TemplateType, typename... Types>
+      struct TemplateArguments<TemplateType<Types...>>
+      {
+          using Arguments = V2::Arguments<Types...>;
+      };
+    } // namespace Details
+
+    template <typename TemplateType>
+    using TemplateArguments = typename Details::TemplateArguments<TemplateType>::Arguments;
+
+    template <size_t I, typename T>
+    struct Arg
+    {
+        using Type = T;
+
+        inline static constexpr size_t Index = I;
+    };
+
+    template <typename TemplateType, typename... ArgIndex>
+    struct ReplaceArguments;
+
+    template <template <typename...> class TemplateType, typename... Types, size_t... ArgIndex, typename... ArgType>
+    struct ReplaceArguments<TemplateType<Types...>, Arg<ArgIndex, ArgType>...>
+    {
+        using Type = void; // TODO: Crear Implementación
+    };
+
+  } // namespace TypeParameters::inline V2
+
+  template <typename>
+  inline constexpr bool AlwaysFalse = false; // false value attached to a dependent name (for static_assert)
+
+  template <size_t Size>
+  inline constexpr size_t NumberOfArguments = Size;
 
   template <typename Type, typename... Types>
   inline constexpr bool IsAnyOf = std::disjunction_v<std::is_same<Type, Types>...>;
 
+  template <typename Type>
+  using RemoveAllSymbols = std::remove_cv_t<std::remove_all_extents_t<std::remove_pointer_t<std::remove_cvref_t<Type>>>>;
+
   template <typename TemplateType>
   struct TemplateTraits
   {
-      using Template    = Details::RemoveAllSymbols<TemplateType>;
-      using ElementType = typename Details::GetElementType<Template>::Type;
+      using Template       = RemoveAllSymbols<TemplateType>;
+      using TypeParameters = TypeParameters::TemplateArguments<Template>;
+      using ElementType    = TypeParameters::template ArgumentIndex<0>;
 
-      template <typename OtherType>
-      using Rebind = typename Details::GetRebindAlias<Template, OtherType>::Type;
+      template <size_t Index>
+      using TypeParameter = TypeParameters::template ArgumentIndex<Index>;
+
+      //   template <typename Type>
+      //   using Rebind = typename TypeParameters::GetRebindAlias<Template, Type>::Type;
   };
-
-  namespace Details
-  {
-    // clang-format off
-
-    template <typename FactoryType>
-    requires requires(const FactoryType Factory)
-    {
-      { std::invoke(Factory) } -> std::same_as<SemanticValue<typename TemplateTraits<std::invoke_result_t<FactoryType>>::ElementType>>;
-    }
-    struct ServiceLocatorFactoryTraits
-    {
-        using ReturnType        = std::invoke_result_t<FactoryType>;
-        using SemanticValueType = std::invoke_result_t<FactoryType>;
-        using ValueType         = typename TemplateTraits<SemanticValueType>::ElementType;
-        using ElementType       = typename TemplateTraits<SemanticValueType>::ElementType;
-    };
-
-    // clang-format on
-  } // namespace Details
-} // namespace Cxx
+} // namespace Cxx::Traits
 
 #endif /* EDE2117E_A7D9_4EB3_892C_7B76526D6A96 */
