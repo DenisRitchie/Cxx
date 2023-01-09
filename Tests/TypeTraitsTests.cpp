@@ -16,9 +16,11 @@ using std::vector;
 using Cxx::Traits::NumberOfArguments;
 using Cxx::Traits::RemoveAllSymbols;
 using Cxx::Traits::TemplateTraits;
+using Cxx::Traits::TypeParameters::Arg;
 using Cxx::Traits::TypeParameters::ArgumentIndex;
 using Cxx::Traits::TypeParameters::ArgumentIndexType;
 using Cxx::Traits::TypeParameters::Arguments;
+using Cxx::Traits::TypeParameters::ReplaceArguments;
 using Cxx::Traits::TypeParameters::TemplateArguments;
 
 TEST(TypeTraitsTests, TypeParameters_V2_ArgumentIndexType)
@@ -71,4 +73,31 @@ TEST(TypeTraitsTests, TypeParameters_V2_TemplateArguments)
     EXPECT_TRUE((std::same_as<TemplateArguments<Tuple>::ArgumentIndex<Index>, std::tuple_element_t<Index, Tuple>> && ...));
   }
   (std::make_index_sequence<TemplateArguments<Tuple>::ArgumentCount>{});
+}
+
+TEST(TypeTraitsTests, TypeParameters_V2_ReplaceArguments)
+{
+  using Tuple    = tuple<int32_t, int32_t, int32_t, int32_t, int32_t, int32_t>;
+  using NewTuple = ReplaceArguments<Tuple, Arg<1, char>, Arg<3, double_t>, Arg<5, std::vector<int32_t>>>::Type;
+
+  [[maybe_unused]] std::tuple_element_t<0, NewTuple> C1;
+  [[maybe_unused]] std::tuple_element_t<1, NewTuple> C2;
+  [[maybe_unused]] std::tuple_element_t<2, NewTuple> C3;
+  [[maybe_unused]] std::tuple_element_t<3, NewTuple> C4;
+  [[maybe_unused]] std::tuple_element_t<4, NewTuple> C5;
+  [[maybe_unused]] std::tuple_element_t<5, NewTuple> C6;
+
+  EXPECT_EQ(typeid(std::tuple_element_t<0, Tuple>), typeid(std::tuple_element_t<0, NewTuple>));
+  EXPECT_NE(typeid(std::tuple_element_t<1, Tuple>), typeid(std::tuple_element_t<1, NewTuple>));
+  EXPECT_EQ(typeid(std::tuple_element_t<2, Tuple>), typeid(std::tuple_element_t<2, NewTuple>));
+  EXPECT_NE(typeid(std::tuple_element_t<3, Tuple>), typeid(std::tuple_element_t<3, NewTuple>));
+  EXPECT_EQ(typeid(std::tuple_element_t<4, Tuple>), typeid(std::tuple_element_t<4, NewTuple>));
+  EXPECT_NE(typeid(std::tuple_element_t<5, Tuple>), typeid(std::tuple_element_t<5, NewTuple>));
+
+  EXPECT_EQ(typeid(std::tuple_element_t<0, NewTuple>), typeid(int32_t));
+  EXPECT_EQ(typeid(std::tuple_element_t<1, NewTuple>), typeid(char));
+  EXPECT_EQ(typeid(std::tuple_element_t<2, NewTuple>), typeid(int32_t));
+  EXPECT_EQ(typeid(std::tuple_element_t<3, NewTuple>), typeid(double_t));
+  EXPECT_EQ(typeid(std::tuple_element_t<4, NewTuple>), typeid(int32_t));
+  EXPECT_EQ(typeid(std::tuple_element_t<5, NewTuple>), typeid(std::vector<int32_t>));
 }
