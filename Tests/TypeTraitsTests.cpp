@@ -114,13 +114,6 @@ TEST(TypeTraitsTests, TypeParameters_V2_ReplaceArguments)
   EXPECT_FALSE((ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<4>::Exists));
   EXPECT_TRUE((ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<5>::Exists));
 
-  EXPECT_TRUE((std::same_as<decltype(ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<0>::SearchTypeFromIndex())::Type, NotFound>));
-  EXPECT_TRUE((std::same_as<decltype(ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<1>::SearchTypeFromIndex())::Type, char8_t>));
-  EXPECT_TRUE((std::same_as<decltype(ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<2>::SearchTypeFromIndex())::Type, NotFound>));
-  EXPECT_TRUE((std::same_as<decltype(ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<3>::SearchTypeFromIndex())::Type, char16_t>));
-  EXPECT_TRUE((std::same_as<decltype(ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<4>::SearchTypeFromIndex())::Type, NotFound>));
-  EXPECT_TRUE((std::same_as<decltype(ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<5>::SearchTypeFromIndex())::Type, char32_t>));
-
   using NewTuple = ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::Type;
 
   EXPECT_EQ(typeid(std::tuple_element_t<0, Tuple>), typeid(std::tuple_element_t<0, NewTuple>));
@@ -137,3 +130,4 @@ TEST(TypeTraitsTests, TypeParameters_V2_ReplaceArguments)
   EXPECT_EQ(typeid(std::tuple_element_t<4, NewTuple>), typeid(float));
   EXPECT_EQ(typeid(std::tuple_element_t<5, NewTuple>), typeid(char32_t));
 }
+

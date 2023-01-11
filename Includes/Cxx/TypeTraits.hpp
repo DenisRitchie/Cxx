@@ -120,6 +120,21 @@ namespace Cxx::Traits::TypeParameters::inline V2
     {
     };
 
+    template <bool ExistsIndex, size_t ReplaceIndex, typename ReplaceArguments>
+    struct FindIndexResult;
+
+    template <size_t ReplaceIndex, typename ReplaceArguments>
+    struct FindIndexResult<false, ReplaceIndex, ReplaceArguments>
+    {
+        using Type = NotFound;
+    };
+
+    template <size_t ReplaceIndex, template <typename...> class ReplaceArguments, typename... ReplaceArgType>
+    struct FindIndexResult<true, ReplaceIndex, ReplaceArguments<ReplaceArgType...>>
+    {
+        using Type = typename ReplaceArguments<ReplaceArgType...>::template ArgumentIndex<ReplaceIndex>::Type;
+    };
+
     template <size_t SearchIndex, class ReplaceArguments, class ReplaceArgumentIndices>
     struct FindIndex;
 
@@ -164,29 +179,7 @@ namespace Cxx::Traits::TypeParameters::inline V2
 
         inline static constexpr bool Exists = SearchIndex() != IndexNotFound;
 
-        inline static consteval auto SearchTypeFromIndex()
-        {
-          if constexpr ( Exists )
-          {
-            struct
-            {
-                using Type = typename ReplaceArguments<ReplaceArgType...>::template ArgumentIndex<SearchIndex()>::Type;
-            } Type;
-
-            return Type;
-          }
-          else
-          {
-            struct
-            {
-                using Type = NotFound;
-            } Type;
-
-            return Type;
-          }
-        }
-
-        using Type = typename decltype(SearchTypeFromIndex())::Type;
+        using Type = typename FindIndexResult<Exists, SearchIndex(), ReplaceArguments<ReplaceArgType...>>::Type;
     };
 
     template <typename TemplateType, typename TemplateIndices, typename ReplaceArgs>
@@ -218,13 +211,16 @@ namespace Cxx::Traits::TypeParameters::inline V2
   template <typename TemplateType, typename ArgPack, typename... ArgIndex>
   struct ReplaceArguments;
 
-  template <template <typename...> class TemplateType, typename... Types, size_t... ArgIndex, typename... ArgType>
-  struct ReplaceArguments<TemplateType<Types...>, Arg<ArgIndex, ArgType>...> : Details::ReplaceArgumentsImpl<TemplateType<Types...>, std::index_sequence_for<Types...>, Arguments<Arg<ArgIndex, ArgType>...>>
+  template <template <typename...> class TemplateType, typename... Types, size_t ArgIndex0, typename ArgType0, size_t... ArgIndex, typename... ArgType>
+  struct ReplaceArguments<TemplateType<Types...>, Arg<ArgIndex0, ArgType0>, Arg<ArgIndex, ArgType>...> : Details::ReplaceArgumentsImpl<TemplateType<Types...>, std::index_sequence_for<Types...>, Arguments<Arg<ArgIndex0, ArgType0>, Arg<ArgIndex, ArgType>...>>
   {
-      static_assert(
-        ((Arg<ArgIndex, ArgType>::Index >= 0 && Arg<ArgIndex, ArgType>::Index < sizeof...(Types)) && ...), //
-        "All argument indices must be greater than or equal to zero and less than the maximum number of arguments of type template"
-      );
+      inline static consteval bool CheckArgs()
+      {
+        return (Arg<ArgIndex0, ArgType0>::Index >= 0 && Arg<ArgIndex0, ArgType0>::Index < sizeof...(Types)) //
+            && ((Arg<ArgIndex, ArgType>::Index >= 0 && Arg<ArgIndex, ArgType>::Index < sizeof...(Types)) && ...);
+      }
+
+      static_assert(CheckArgs(), "All argument indices must be greater than or equal to zero and less than the maximum number of arguments of type template");
   };
 
   template <template <typename...> class TemplateType, typename... Types, size_t... ArgIndex>
