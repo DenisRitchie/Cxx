@@ -5,7 +5,7 @@
 
 namespace Cxx::Traits::TypeParameters
 {
-  namespace [[deprecated]] V1
+  namespace [[deprecated("Use namespace Cxx::Traits::TypeParameters::inline V2")]] V1
   {
     template <typename Type>
     struct GetFirstParameter;
@@ -116,48 +116,77 @@ namespace Cxx::Traits::TypeParameters::inline V2
 
   namespace Details
   {
-    template <typename TemplateType, typename = void>
-    struct ReplaceArgumentPack;
-
-    template <template <typename...> class TemplateType, typename... Types, size_t... Index>
-    struct ReplaceArgumentPack<TemplateType<Types...>, std::index_sequence<Index...>>
-    {
-        using Args = Arguments<Arg<Index, Types>...>;
-    };
-
     struct NotFound
     {
     };
 
-    template <size_t SearchIndex, typename ReplaceArguments, typename = void>
-    struct FindIndexImpl;
-
-    template <size_t SearchIndex, typename ReplaceArguments>
-    struct FindIndexImpl<SearchIndex, ReplaceArguments, std::false_type>
-    {
-        using Type = NotFound;
-
-        inline static constexpr bool Exists = false;
-    };
-
-    template <size_t SearchIndex, typename ReplaceArguments>
-    struct FindIndexImpl<SearchIndex, ReplaceArguments, std::true_type>
-    {
-        using Type = typename ReplaceArguments::template ArgumentIndex<SearchIndex>;
-
-        inline static constexpr bool Exists = true;
-    };
-
-    template <size_t SearchIndex, class ReplaceArguments, class IndexSequence>
+    template <size_t SearchIndex, class ReplaceArguments, class ReplaceArgumentIndices>
     struct FindIndex;
 
-    template <size_t SearchIndex, template <typename...> class ReplaceArguments, typename... ReplaceArgType, size_t... ReplaceArgIndex>
-    struct FindIndex<SearchIndex, ReplaceArguments<ReplaceArgType...>, std::index_sequence<ReplaceArgIndex...>>
+    template <size_t TemplateSearchIndex, template <typename...> class ReplaceArguments, typename... ReplaceArgType, size_t... ReplaceArgIndex>
+    struct FindIndex<TemplateSearchIndex, ReplaceArguments<ReplaceArgType...>, std::index_sequence<ReplaceArgIndex...>>
     {
-        using Impl = FindIndexImpl<SearchIndex, ReplaceArguments<ReplaceArgType...>, std::bool_constant<((SearchIndex == ReplaceArgIndex) || ...)>>;
-        using Type = typename Impl::Type;
+        inline static constexpr size_t TemplateIndex = TemplateSearchIndex;
+        inline static constexpr size_t IndexNotFound = static_cast<size_t>(-1);
 
-        inline static constexpr bool Exists = Impl::Exists;
+        struct ValueIndex
+        {
+            constexpr ValueIndex(const size_t index, const size_t replace_index) noexcept
+              : Index{ index }
+              , ReplaceIndex{ replace_index }
+            {
+            }
+
+            size_t Index;
+            size_t ReplaceIndex;
+        };
+
+        inline static consteval size_t SearchIndex() noexcept
+        {
+          // clang-format off
+          for ( const auto& [Index, ReplaceIndex] : std::initializer_list<ValueIndex> {
+                  ValueIndex
+                  {
+                    ReplaceArgIndex,
+                    ReplaceArguments<ReplaceArgType...>::template ArgumentIndex<ReplaceArgIndex>::Index
+                  } ...
+          } )
+          // clang-format on
+          {
+            if ( ReplaceIndex == TemplateSearchIndex )
+            {
+              return Index;
+            }
+          }
+
+          return IndexNotFound;
+        }
+
+        inline static constexpr bool Exists = SearchIndex() != IndexNotFound;
+
+        inline static consteval auto SearchTypeFromIndex()
+        {
+          if constexpr ( Exists )
+          {
+            struct
+            {
+                using Type = typename ReplaceArguments<ReplaceArgType...>::template ArgumentIndex<SearchIndex()>::Type;
+            } Type;
+
+            return Type;
+          }
+          else
+          {
+            struct
+            {
+                using Type = NotFound;
+            } Type;
+
+            return Type;
+          }
+        }
+
+        using Type = typename decltype(SearchTypeFromIndex())::Type;
     };
 
     template <typename TemplateType, typename TemplateIndices, typename ReplaceArgs>
@@ -166,38 +195,41 @@ namespace Cxx::Traits::TypeParameters::inline V2
     template <template <typename...> class TemplateType, typename... TypeParameters, size_t... TemplateArgIndex, size_t... ReplaceArgIndex, typename... ReplaceArgType>
     struct ReplaceArgumentsImpl<TemplateType<TypeParameters...>, std::index_sequence<TemplateArgIndex...>, Arguments<Arg<ReplaceArgIndex, ReplaceArgType>...>>
     {
-        using TemplateArgs = ReplaceArgumentPack<TemplateType<TypeParameters...>, std::index_sequence_for<TypeParameters...>>::Args;
-        using ReplaceArgs  = Arguments<Arg<ReplaceArgIndex, ReplaceArgType>...>;
+        using FindIndexArgs = Arguments<FindIndex<TemplateArgIndex, Arguments<Arg<ReplaceArgIndex, ReplaceArgType>...>, std::index_sequence_for<ReplaceArgType...>>...>;
+        using TemplateArgs  = Arguments<Arg<TemplateArgIndex, TypeParameters>...>;
+        using ReplaceArgs   = Arguments<Arg<ReplaceArgIndex, ReplaceArgType>...>;
 
-        // clang-format off
-        using Type = TemplateType
-        <
-            std::conditional_t
-            <
-                FindIndex<TemplateArgIndex, ReplaceArgs, std::index_sequence_for<ReplaceArgType...>>::Exists,
-                typename FindIndex<TemplateArgIndex, ReplaceArgs, std::index_sequence_for<ReplaceArgType...>>::Type,
-                typename TemplateArgs::template ArgumentIndex<TemplateArgIndex>::Type
-            >...
-        >;
-        // clang-format on
+        using Type = TemplateType<std::conditional_t<FindIndexArgs::template ArgumentIndex<TemplateArgIndex>::Exists, typename FindIndexArgs::template ArgumentIndex<TemplateArgIndex>::Type, TypeParameters>...>;
+    };
+
+    template <typename Arguments, typename Indices>
+    struct ArgPackImpl;
+
+    template <typename... Type, size_t... Index>
+    struct ArgPackImpl<Arguments<Type...>, std::index_sequence<Index...>>
+    {
+        using Types = Arguments<Arg<Index, Type>...>;
     };
   } // namespace Details
 
-  template <typename TemplateType, typename... ArgIndex>
+  template <typename... Types>
+  using ArgPack = typename Details::ArgPackImpl<Arguments<Types...>, std::index_sequence_for<Types...>>::Types;
+
+  template <typename TemplateType, typename ArgPack, typename... ArgIndex>
   struct ReplaceArguments;
 
   template <template <typename...> class TemplateType, typename... Types, size_t... ArgIndex, typename... ArgType>
-  struct ReplaceArguments<TemplateType<Types...>, Arg<ArgIndex, ArgType>...>
+  struct ReplaceArguments<TemplateType<Types...>, Arg<ArgIndex, ArgType>...> : Details::ReplaceArgumentsImpl<TemplateType<Types...>, std::index_sequence_for<Types...>, Arguments<Arg<ArgIndex, ArgType>...>>
   {
       static_assert(
         ((Arg<ArgIndex, ArgType>::Index >= 0 && Arg<ArgIndex, ArgType>::Index < sizeof...(Types)) && ...), //
         "All argument indices must be greater than or equal to zero and less than the maximum number of arguments of type template"
       );
+  };
 
-      using _Impl        = Details::ReplaceArgumentsImpl<TemplateType<Types...>, std::index_sequence_for<Types...>, Arguments<Arg<ArgIndex, ArgType>...>>;
-      using TemplateArgs = _Impl::TemplateArgs;
-      using ReplaceArgs  = _Impl::ReplaceArgs;
-      using Type         = _Impl::Type;
+  template <template <typename...> class TemplateType, typename... Types, size_t... ArgIndex>
+  struct ReplaceArguments<TemplateType<Types...>, Arguments<Arg<ArgIndex, Types>...>> : ReplaceArguments<TemplateType<Types...>, Arg<ArgIndex, Types>...>
+  {
   };
 } // namespace Cxx::Traits::TypeParameters::inline V2
 
@@ -225,8 +257,8 @@ namespace Cxx::Traits
       template <size_t Index>
       using TypeParameter = TypeParameters::template ArgumentIndex<Index>;
 
-      //   template <typename Type>
-      //   using Rebind = typename TypeParameters::GetRebindAlias<Template, Type>::Type;
+      template <typename... Types>
+      using Rebind = typename Cxx::Traits::TypeParameters::ReplaceArguments<Template, Cxx::Traits::TypeParameters::ArgPack<Types...>>::Type;
   };
 } // namespace Cxx::Traits
 

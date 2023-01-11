@@ -32,6 +32,7 @@
     "C_Cpp.default.cppStandard": "c++23",
     // "C_Cpp.default.intelliSenseMode": "windows-msvc-x64",
     "C_Cpp.errorSquiggles": "disabled",
+    "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseCacheSize": 1048576,
     "C_Cpp.intelliSenseMemoryLimit": 16384,
     "C_Cpp.vcpkg.enabled": false,

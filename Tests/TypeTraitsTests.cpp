@@ -77,15 +77,51 @@ TEST(TypeTraitsTests, TypeParameters_V2_TemplateArguments)
 
 TEST(TypeTraitsTests, TypeParameters_V2_ReplaceArguments)
 {
-  using Tuple    = tuple<int32_t, int32_t, int32_t, int32_t, int32_t, int32_t>;
-  using NewTuple = ReplaceArguments<Tuple, Arg<1, char>, Arg<3, double_t>, Arg<5, std::vector<int32_t>>>::Type;
+  constexpr size_t IndexNotFound = static_cast<size_t>(-1);
 
-  [[maybe_unused]] std::tuple_element_t<0, NewTuple> C1;
-  [[maybe_unused]] std::tuple_element_t<1, NewTuple> C2;
-  [[maybe_unused]] std::tuple_element_t<2, NewTuple> C3;
-  [[maybe_unused]] std::tuple_element_t<3, NewTuple> C4;
-  [[maybe_unused]] std::tuple_element_t<4, NewTuple> C5;
-  [[maybe_unused]] std::tuple_element_t<5, NewTuple> C6;
+  using NotFound = Cxx::Traits::TypeParameters::V2::Details::NotFound;
+  using Tuple    = tuple<int8_t, int16_t, int32_t, int64_t, float, double>;
+
+  EXPECT_TRUE((std::same_as<ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::TemplateArgs::ArgumentIndex<0>::Type, int8_t>));
+  EXPECT_TRUE((std::same_as<ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::TemplateArgs::ArgumentIndex<1>::Type, int16_t>));
+  EXPECT_TRUE((std::same_as<ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::TemplateArgs::ArgumentIndex<2>::Type, int32_t>));
+  EXPECT_TRUE((std::same_as<ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::TemplateArgs::ArgumentIndex<3>::Type, int64_t>));
+  EXPECT_TRUE((std::same_as<ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::TemplateArgs::ArgumentIndex<4>::Type, float>));
+  EXPECT_TRUE((std::same_as<ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::TemplateArgs::ArgumentIndex<5>::Type, double>));
+
+  EXPECT_TRUE((std::same_as<ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::ReplaceArgs::ArgumentIndex<0>::Type, char8_t>));
+  EXPECT_TRUE((std::same_as<ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::ReplaceArgs::ArgumentIndex<1>::Type, char16_t>));
+  EXPECT_TRUE((std::same_as<ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::ReplaceArgs::ArgumentIndex<2>::Type, char32_t>));
+
+  EXPECT_TRUE((std::same_as<ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<0>::Type, NotFound>));
+  EXPECT_TRUE((std::same_as<ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<1>::Type, char8_t>));
+  EXPECT_TRUE((std::same_as<ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<2>::Type, NotFound>));
+  EXPECT_TRUE((std::same_as<ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<3>::Type, char16_t>));
+  EXPECT_TRUE((std::same_as<ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<4>::Type, NotFound>));
+  EXPECT_TRUE((std::same_as<ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<5>::Type, char32_t>));
+
+  EXPECT_EQ((ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<0>::SearchIndex()), IndexNotFound);
+  EXPECT_EQ((ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<1>::SearchIndex()), 0);
+  EXPECT_EQ((ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<2>::SearchIndex()), IndexNotFound);
+  EXPECT_EQ((ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<3>::SearchIndex()), 1);
+  EXPECT_EQ((ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<4>::SearchIndex()), IndexNotFound);
+  EXPECT_EQ((ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<5>::SearchIndex()), 2);
+
+  EXPECT_FALSE((ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<0>::Exists));
+  EXPECT_TRUE((ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<1>::Exists));
+  EXPECT_FALSE((ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<2>::Exists));
+  EXPECT_TRUE((ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<3>::Exists));
+  EXPECT_FALSE((ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<4>::Exists));
+  EXPECT_TRUE((ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<5>::Exists));
+
+  EXPECT_TRUE((std::same_as<decltype(ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<0>::SearchTypeFromIndex())::Type, NotFound>));
+  EXPECT_TRUE((std::same_as<decltype(ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<1>::SearchTypeFromIndex())::Type, char8_t>));
+  EXPECT_TRUE((std::same_as<decltype(ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<2>::SearchTypeFromIndex())::Type, NotFound>));
+  EXPECT_TRUE((std::same_as<decltype(ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<3>::SearchTypeFromIndex())::Type, char16_t>));
+  EXPECT_TRUE((std::same_as<decltype(ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<4>::SearchTypeFromIndex())::Type, NotFound>));
+  EXPECT_TRUE((std::same_as<decltype(ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::FindIndexArgs::ArgumentIndex<5>::SearchTypeFromIndex())::Type, char32_t>));
+
+  using NewTuple = ReplaceArguments<Tuple, Arg<1, char8_t>, Arg<3, char16_t>, Arg<5, char32_t>>::Type;
 
   EXPECT_EQ(typeid(std::tuple_element_t<0, Tuple>), typeid(std::tuple_element_t<0, NewTuple>));
   EXPECT_NE(typeid(std::tuple_element_t<1, Tuple>), typeid(std::tuple_element_t<1, NewTuple>));
@@ -94,10 +130,10 @@ TEST(TypeTraitsTests, TypeParameters_V2_ReplaceArguments)
   EXPECT_EQ(typeid(std::tuple_element_t<4, Tuple>), typeid(std::tuple_element_t<4, NewTuple>));
   EXPECT_NE(typeid(std::tuple_element_t<5, Tuple>), typeid(std::tuple_element_t<5, NewTuple>));
 
-  EXPECT_EQ(typeid(std::tuple_element_t<0, NewTuple>), typeid(int32_t));
-  EXPECT_EQ(typeid(std::tuple_element_t<1, NewTuple>), typeid(char));
+  EXPECT_EQ(typeid(std::tuple_element_t<0, NewTuple>), typeid(int8_t));
+  EXPECT_EQ(typeid(std::tuple_element_t<1, NewTuple>), typeid(char8_t));
   EXPECT_EQ(typeid(std::tuple_element_t<2, NewTuple>), typeid(int32_t));
-  EXPECT_EQ(typeid(std::tuple_element_t<3, NewTuple>), typeid(double_t));
-  EXPECT_EQ(typeid(std::tuple_element_t<4, NewTuple>), typeid(int32_t));
-  EXPECT_EQ(typeid(std::tuple_element_t<5, NewTuple>), typeid(std::vector<int32_t>));
+  EXPECT_EQ(typeid(std::tuple_element_t<3, NewTuple>), typeid(char16_t));
+  EXPECT_EQ(typeid(std::tuple_element_t<4, NewTuple>), typeid(float));
+  EXPECT_EQ(typeid(std::tuple_element_t<5, NewTuple>), typeid(char32_t));
 }

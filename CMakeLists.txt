@@ -19,6 +19,7 @@ include(MessageLog)
 MessageLog("${PROJECT_NAME} v${PROJECT_VERSION}: ${PROJECT_DESCRIPTION}")
 
 if(MSVC)
+    # https://learn.microsoft.com/en-us/cpp/build/reference/compiler-options?view=msvc-170
     # Warning level 4 and all warnings as errors
     add_compile_options(/W4 /WX /await:strict /std:c++latest /Zc:__cplusplus)
 else()
