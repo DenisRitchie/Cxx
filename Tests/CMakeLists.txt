@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(
-    DesignPatternTests
+    CxxLibraries
     LANGUAGES C CXX
     VERSION 1.0.0.0
     DESCRIPTION "Test: ${CMAKE_PROJECT_DESCRIPTION}"
-    HOMEPAGE_URL "https://github.com/DenisRitchie/NativeDesignPatterns"
+    HOMEPAGE_URL "https://github.com/DenisRitchie/Cxx"
 )
 
 MessageLog("${PROJECT_NAME} v${PROJECT_VERSION}: ${PROJECT_DESCRIPTION}")
@@ -31,7 +31,7 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-set(TEST_PROJECT_NAME DesignPatternTests)
+set(TEST_PROJECT_NAME CxxLibrariesTests)
 
 add_executable(${TEST_PROJECT_NAME} ${cpp_source_files})
 
@@ -39,7 +39,7 @@ target_link_libraries(${TEST_PROJECT_NAME}
     PUBLIC
         GTest::gtest_main
         GTest::gmock_main
-        Cxx::DesignPatterns
+        Cxx::Library::Core
 )
 
 target_include_directories(${TEST_PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/Includes)

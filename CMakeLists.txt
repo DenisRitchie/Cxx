@@ -1,16 +1,12 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(
-    NativeDesignPatterns
+    CxxLibraries
     LANGUAGES C CXX
     VERSION 1.0.0.0
-    DESCRIPTION "Patrones de diseño nativos escritos en C y C++"
-    HOMEPAGE_URL "https://github.com/DenisRitchie/NativeDesignPatterns"
+    DESCRIPTION "Librerías y patrones de diseños nativos escritos en C y/o C++"
+    HOMEPAGE_URL "https://github.com/DenisRitchie/Cxx"
 )
-
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Default build type: RelWithDebInfo" FORCE)
-endif()
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/CMake)
 
@@ -28,7 +24,7 @@ else()
 endif()
 
 add_library(${PROJECT_NAME} STATIC)
-add_library(Cxx::DesignPatterns ALIAS ${PROJECT_NAME})
+add_library(Cxx::Library::Core ALIAS ${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME}
     PUBLIC
