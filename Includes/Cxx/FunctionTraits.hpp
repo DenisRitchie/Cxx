@@ -57,6 +57,8 @@ namespace Cxx::Traits
       inline static constexpr bool   IsRConstVolatileNoexcept = false; /* Example: void (Object::*)() const volatile && noexcept */
   };
 
+  /***************************************************************************************************************************************/
+
   template <typename ReturnType, typename... ArgumentTypes>
   struct FunctionTraits<ReturnType (*)(ArgumentTypes...)> : FunctionTraits<ReturnType(ArgumentTypes...)>
   {
@@ -70,55 +72,392 @@ namespace Cxx::Traits
       inline static constexpr bool IsNoexcept        = true;
   };
 
-#define DEFINE_FUNCTION_TRAITS(...)                                                                                             \
- template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>                                                 \
- struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) __VA_ARGS__> : FunctionTraits<ReturnType(ArgumentTypes...)> \
- {                                                                                                                              \
-   using Object = ObjectType;                                                                                                   \
- };
+  /***************************************************************************************************************************************/
 
-  DEFINE_FUNCTION_TRAITS()
-  DEFINE_FUNCTION_TRAITS(const)
-  DEFINE_FUNCTION_TRAITS(volatile)
-  DEFINE_FUNCTION_TRAITS(const volatile)
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...)> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
 
-  DEFINE_FUNCTION_TRAITS(noexcept)
-  DEFINE_FUNCTION_TRAITS(const noexcept)
-  DEFINE_FUNCTION_TRAITS(volatile noexcept)
-  DEFINE_FUNCTION_TRAITS(const volatile noexcept)
+      inline static constexpr bool IsL              = true;
+      inline static constexpr bool IsR              = true;
+      inline static constexpr bool IsMemberFunction = true;
+  };
 
-  DEFINE_FUNCTION_TRAITS(&)
-  DEFINE_FUNCTION_TRAITS(const&)
-  DEFINE_FUNCTION_TRAITS(volatile&)
-  DEFINE_FUNCTION_TRAITS(const volatile&)
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) const> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
 
-  DEFINE_FUNCTION_TRAITS(&noexcept)
-  DEFINE_FUNCTION_TRAITS(const& noexcept)
-  DEFINE_FUNCTION_TRAITS(volatile& noexcept)
-  DEFINE_FUNCTION_TRAITS(const volatile& noexcept)
+      inline static constexpr bool IsL              = true;
+      inline static constexpr bool IsR              = true;
+      inline static constexpr bool IsConst          = true;
+      inline static constexpr bool IsLConst         = true;
+      inline static constexpr bool IsRConst         = true;
+      inline static constexpr bool IsMemberFunction = true;
+  };
 
-  DEFINE_FUNCTION_TRAITS(&&)
-  DEFINE_FUNCTION_TRAITS(const&&)
-  DEFINE_FUNCTION_TRAITS(volatile&&)
-  DEFINE_FUNCTION_TRAITS(const volatile&&)
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) volatile> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
 
-  DEFINE_FUNCTION_TRAITS(&&noexcept)
-  DEFINE_FUNCTION_TRAITS(const&& noexcept)
-  DEFINE_FUNCTION_TRAITS(volatile&& noexcept)
-  DEFINE_FUNCTION_TRAITS(const volatile&& noexcept)
+      inline static constexpr bool IsL              = true;
+      inline static constexpr bool IsR              = true;
+      inline static constexpr bool IsVolatile       = true;
+      inline static constexpr bool IsLVolatile      = true;
+      inline static constexpr bool IsRVolatile      = true;
+      inline static constexpr bool IsMemberFunction = true;
+  };
 
-#undef DEFINE_FUNCTION_TRAITS
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) const volatile> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsConst          = true;
+      inline static constexpr bool IsVolatile       = true;
+      inline static constexpr bool IsConstVolatile  = true;
+      inline static constexpr bool IsL              = true;
+      inline static constexpr bool IsLConst         = true;
+      inline static constexpr bool IsLVolatile      = true;
+      inline static constexpr bool IsLConstVolatile = true;
+      inline static constexpr bool IsR              = true;
+      inline static constexpr bool IsRConst         = true;
+      inline static constexpr bool IsRVolatile      = true;
+      inline static constexpr bool IsRConstVolatile = true;
+      inline static constexpr bool IsMemberFunction = true;
+  };
+
+  /***************************************************************************************************************************************/
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) noexcept> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsL              = true;
+      inline static constexpr bool IsR              = true;
+      inline static constexpr bool IsNoexcept       = true;
+      inline static constexpr bool IsLNoexcept      = true;
+      inline static constexpr bool IsRNoexcept      = true;
+      inline static constexpr bool IsMemberFunction = true;
+  };
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) const noexcept> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsConst          = true;
+      inline static constexpr bool IsNoexcept       = true;
+      inline static constexpr bool IsConstNoexcept  = true;
+      inline static constexpr bool IsL              = true;
+      inline static constexpr bool IsLConst         = true;
+      inline static constexpr bool IsLNoexcept      = true;
+      inline static constexpr bool IsLConstNoexcept = true;
+      inline static constexpr bool IsR              = true;
+      inline static constexpr bool IsRConst         = true;
+      inline static constexpr bool IsRNoexcept      = true;
+      inline static constexpr bool IsRConstNoexcept = true;
+      inline static constexpr bool IsMemberFunction = true;
+  };
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) volatile noexcept> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsVolatile          = true;
+      inline static constexpr bool IsNoexcept          = true;
+      inline static constexpr bool IsVolatileNoexcept  = true;
+      inline static constexpr bool IsL                 = true;
+      inline static constexpr bool IsLVolatile         = true;
+      inline static constexpr bool IsLNoexcept         = true;
+      inline static constexpr bool IsLVolatileNoexcept = true;
+      inline static constexpr bool IsR                 = true;
+      inline static constexpr bool IsRVolatile         = true;
+      inline static constexpr bool IsRNoexcept         = true;
+      inline static constexpr bool IsRVolatileNoexcept = true;
+      inline static constexpr bool IsMemberFunction    = true;
+  };
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) const volatile noexcept> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsConst                  = true; // #1
+      inline static constexpr bool IsVolatile               = true; // #2
+      inline static constexpr bool IsConstVolatile          = true; // #3
+      inline static constexpr bool IsNoexcept               = true; // #4
+      inline static constexpr bool IsConstNoexcept          = true; // #5
+      inline static constexpr bool IsVolatileNoexcept       = true; // #6
+      inline static constexpr bool IsConstVolatileNoexcept  = true; // #7
+      inline static constexpr bool IsL                      = true; // #8
+      inline static constexpr bool IsLConst                 = true; // #9
+      inline static constexpr bool IsLVolatile              = true; // #10
+      inline static constexpr bool IsLConstVolatile         = true; // #11
+      inline static constexpr bool IsLNoexcept              = true; // #12
+      inline static constexpr bool IsLConstNoexcept         = true; // #13
+      inline static constexpr bool IsLVolatileNoexcept      = true; // #14
+      inline static constexpr bool IsLConstVolatileNoexcept = true; // #15
+      inline static constexpr bool IsR                      = true; // #16
+      inline static constexpr bool IsRConst                 = true; // #17
+      inline static constexpr bool IsRVolatile              = true; // #18
+      inline static constexpr bool IsRConstVolatile         = true; // #19
+      inline static constexpr bool IsRNoexcept              = true; // #20
+      inline static constexpr bool IsRConstNoexcept         = true; // #21
+      inline static constexpr bool IsRVolatileNoexcept      = true; // #22
+      inline static constexpr bool IsRConstVolatileNoexcept = true; // #23
+      inline static constexpr bool IsMemberFunction         = true; // #24
+  };
+
+  /***************************************************************************************************************************************/
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...)&> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsL              = true;
+      inline static constexpr bool IsMemberFunction = true;
+  };
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) const&> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsL              = true;
+      inline static constexpr bool IsConst          = true;
+      inline static constexpr bool IsLConst         = true;
+      inline static constexpr bool IsMemberFunction = true;
+  };
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) volatile&> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsL              = true;
+      inline static constexpr bool IsVolatile       = true;
+      inline static constexpr bool IsLVolatile      = true;
+      inline static constexpr bool IsMemberFunction = true;
+  };
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) const volatile&> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsConst          = true;
+      inline static constexpr bool IsVolatile       = true;
+      inline static constexpr bool IsConstVolatile  = true;
+      inline static constexpr bool IsL              = true;
+      inline static constexpr bool IsLConst         = true;
+      inline static constexpr bool IsLVolatile      = true;
+      inline static constexpr bool IsLConstVolatile = true;
+      inline static constexpr bool IsMemberFunction = true;
+  };
+
+  /***************************************************************************************************************************************/
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) & noexcept> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsL              = true;
+      inline static constexpr bool IsNoexcept       = true;
+      inline static constexpr bool IsLNoexcept      = true;
+      inline static constexpr bool IsMemberFunction = true;
+  };
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) const & noexcept> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsConst          = true;
+      inline static constexpr bool IsNoexcept       = true;
+      inline static constexpr bool IsConstNoexcept  = true;
+      inline static constexpr bool IsL              = true;
+      inline static constexpr bool IsLConst         = true;
+      inline static constexpr bool IsLNoexcept      = true;
+      inline static constexpr bool IsLConstNoexcept = true;
+      inline static constexpr bool IsMemberFunction = true;
+  };
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) volatile & noexcept> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsVolatile          = true;
+      inline static constexpr bool IsNoexcept          = true;
+      inline static constexpr bool IsVolatileNoexcept  = true;
+      inline static constexpr bool IsL                 = true;
+      inline static constexpr bool IsLVolatile         = true;
+      inline static constexpr bool IsLNoexcept         = true;
+      inline static constexpr bool IsLVolatileNoexcept = true;
+      inline static constexpr bool IsMemberFunction    = true;
+  };
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) const volatile & noexcept> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsConst                  = true; // #1
+      inline static constexpr bool IsVolatile               = true; // #2
+      inline static constexpr bool IsConstVolatile          = true; // #3
+      inline static constexpr bool IsNoexcept               = true; // #4
+      inline static constexpr bool IsConstNoexcept          = true; // #5
+      inline static constexpr bool IsVolatileNoexcept       = true; // #6
+      inline static constexpr bool IsConstVolatileNoexcept  = true; // #7
+      inline static constexpr bool IsL                      = true; // #8
+      inline static constexpr bool IsLConst                 = true; // #9
+      inline static constexpr bool IsLVolatile              = true; // #10
+      inline static constexpr bool IsLConstVolatile         = true; // #11
+      inline static constexpr bool IsLNoexcept              = true; // #12
+      inline static constexpr bool IsLConstNoexcept         = true; // #13
+      inline static constexpr bool IsLVolatileNoexcept      = true; // #14
+      inline static constexpr bool IsLConstVolatileNoexcept = true; // #15
+      inline static constexpr bool IsMemberFunction         = true; // #16
+  };
+
+  /***************************************************************************************************************************************/
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) &&> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsR              = true;
+      inline static constexpr bool IsMemberFunction = true;
+  };
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) const&&> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsR              = true;
+      inline static constexpr bool IsConst          = true;
+      inline static constexpr bool IsRConst         = true;
+      inline static constexpr bool IsMemberFunction = true;
+  };
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) volatile&&> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsR              = true;
+      inline static constexpr bool IsVolatile       = true;
+      inline static constexpr bool IsRVolatile      = true;
+      inline static constexpr bool IsMemberFunction = true;
+  };
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) const volatile&&> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsConst          = true;
+      inline static constexpr bool IsVolatile       = true;
+      inline static constexpr bool IsConstVolatile  = true;
+      inline static constexpr bool IsR              = true;
+      inline static constexpr bool IsRConst         = true;
+      inline static constexpr bool IsRVolatile      = true;
+      inline static constexpr bool IsRConstVolatile = true;
+      inline static constexpr bool IsMemberFunction = true;
+  };
+
+  /***************************************************************************************************************************************/
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) && noexcept> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsR              = true;
+      inline static constexpr bool IsNoexcept       = true;
+      inline static constexpr bool IsRNoexcept      = true;
+      inline static constexpr bool IsMemberFunction = true;
+  };
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) const && noexcept> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsConst          = true;
+      inline static constexpr bool IsNoexcept       = true;
+      inline static constexpr bool IsConstNoexcept  = true;
+      inline static constexpr bool IsR              = true;
+      inline static constexpr bool IsRConst         = true;
+      inline static constexpr bool IsRNoexcept      = true;
+      inline static constexpr bool IsRConstNoexcept = true;
+      inline static constexpr bool IsMemberFunction = true;
+  };
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) volatile && noexcept> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsVolatile          = true;
+      inline static constexpr bool IsNoexcept          = true;
+      inline static constexpr bool IsVolatileNoexcept  = true;
+      inline static constexpr bool IsR                 = true;
+      inline static constexpr bool IsRVolatile         = true;
+      inline static constexpr bool IsRNoexcept         = true;
+      inline static constexpr bool IsRVolatileNoexcept = true;
+      inline static constexpr bool IsMemberFunction    = true;
+  };
+
+  template <typename ReturnType, typename ObjectType, typename... ArgumentTypes>
+  struct FunctionTraits<ReturnType (ObjectType::*)(ArgumentTypes...) const volatile && noexcept> : FunctionTraits<ReturnType(ArgumentTypes...)>
+  {
+      using Object = ObjectType;
+
+      inline static constexpr bool IsConst                  = true; // #1
+      inline static constexpr bool IsVolatile               = true; // #2
+      inline static constexpr bool IsConstVolatile          = true; // #3
+      inline static constexpr bool IsNoexcept               = true; // #4
+      inline static constexpr bool IsConstNoexcept          = true; // #5
+      inline static constexpr bool IsVolatileNoexcept       = true; // #6
+      inline static constexpr bool IsConstVolatileNoexcept  = true; // #7
+      inline static constexpr bool IsR                      = true; // #8
+      inline static constexpr bool IsRConst                 = true; // #9
+      inline static constexpr bool IsRVolatile              = true; // #10
+      inline static constexpr bool IsRConstVolatile         = true; // #11
+      inline static constexpr bool IsRNoexcept              = true; // #12
+      inline static constexpr bool IsRConstNoexcept         = true; // #13
+      inline static constexpr bool IsRVolatileNoexcept      = true; // #14
+      inline static constexpr bool IsRConstVolatileNoexcept = true; // #15
+      inline static constexpr bool IsMemberFunction         = true; // #16
+  };
+
+  /***************************************************************************************************************************************/
 
   template <typename FunctionType>
   struct FunctionTraits<std::function<FunctionType>> : FunctionTraits<FunctionType>
   {
       using Object = std::function<FunctionType>;
+
+      inline static constexpr bool IsStdFunction    = true;
+      inline static constexpr bool IsObjectFunction = true;
   };
 
   template <typename CallableObject>
   struct FunctionTraits : FunctionTraits<decltype(&CallableObject::operator())>
   {
       using Object = CallableObject;
+
+      inline static constexpr bool IsObjectFunction = true;
   };
 } // namespace Cxx::Traits
 
