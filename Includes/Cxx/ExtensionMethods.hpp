@@ -31,46 +31,47 @@ namespace Cxx::LINQ::MethodSyntax
     template <std::ranges::range RangeType>
     struct ToImplementation
     {
-        // TODO: Crear un iterador personalizado para los distintos métodos de inserción
-        constexpr auto operator()(auto&& Value) const -> RangeType
+        // * TODO: Crear un iterador personalizado para los distintos métodos de inserción
+        // * TODO: Detectar si tipo de end() es diferente de begin() y crear un iterador común en ese caso
+        constexpr auto operator()(auto&& value) const -> RangeType
         {
-          RangeType Result;
-          std::copy(Value.begin(), Value.end(), std::back_inserter(Result));
-          return Result;
+          RangeType result;
+          std::copy(value.begin(), value.end(), std::back_inserter(result));
+          return result;
         }
     };
 
     struct UpperCaseImplementation
     {
         template <typename CharType, typename TraitType, typename AllocatorType>
-        constexpr auto&& operator()(const std::basic_string<CharType, TraitType, AllocatorType>& Value) const noexcept
+        constexpr auto&& operator()(const std::basic_string<CharType, TraitType, AllocatorType>& value) const noexcept
         {
-          auto Letter = const_cast<CharType*>(Value.data());
+          CharType*   letter      = const_cast<CharType*>(value.data());
+          const auto& ctype_facet = std::use_facet<std::ctype_byname<char>>(std::locale());
 
-          while ( *Letter != '\0' )
+          for ( ; *letter != '\0'; ++letter )
           {
-            *Letter = static_cast<CharType>(std::toupper(*Letter, std::locale()));
-            ++Letter;
+            *letter = static_cast<CharType>(ctype_facet.toupper(*letter));
           }
 
-          return Value;
+          return value;
         }
     };
 
     struct LowerCaseImplementation
     {
         template <typename CharType, typename TraitType, typename AllocatorType>
-        constexpr auto&& operator()(const std::basic_string<CharType, TraitType, AllocatorType>& Value) const noexcept
+        constexpr auto&& operator()(const std::basic_string<CharType, TraitType, AllocatorType>& value) const noexcept
         {
-          auto Letter = const_cast<CharType*>(Value.data());
+          CharType*   letter      = const_cast<CharType*>(value.data());
+          const auto& ctype_facet = std::use_facet<std::ctype_byname<char>>(std::locale());
 
-          while ( *Letter != '\0' )
+          for ( ; *letter != '\0'; ++letter )
           {
-            *Letter = static_cast<CharType>(std::tolower(*Letter, std::locale()));
-            ++Letter;
+            *letter = static_cast<CharType>(ctype_facet.tolower(*letter));
           }
 
-          return Value;
+          return value;
         }
     };
 
@@ -78,15 +79,15 @@ namespace Cxx::LINQ::MethodSyntax
     {
         // clang-format off
 
-        // TODO: Crear implementación para obtener de diferentes maneras la cantidad de items de un array
+        // * TODO: Crear implementación para obtener de diferentes maneras la cantidad de items de un array
         template <typename Type>
-        requires requires(Cxx::Traits::RemoveAllSymbols<Type> Value)
+        requires requires(Cxx::Traits::RemoveAllSymbols<Type> value)
         {
-          { Value.size() };
+          { value.size() };
         }
-        constexpr auto operator()(Type&& Value) const noexcept
+        constexpr auto operator()(Type&& value) const noexcept
         {
-          return Value.size();
+          return value.size();
         }
 
         // clang-format on
@@ -94,64 +95,64 @@ namespace Cxx::LINQ::MethodSyntax
 
     struct BooleanStringImplementation
     {
-        inline static constexpr std::string_view BooleanString(const bool Value) noexcept
+        inline static constexpr std::string_view BooleanString(const bool value) noexcept
         {
-          return Value ? "True" : "False";
+          return value ? "True" : "False";
         }
 
         template <typename Type>
-        constexpr std::string_view operator()(Type&& Value) const noexcept
+        constexpr std::string_view operator()(Type&& value) const noexcept
         {
           if constexpr ( std::is_pointer_v<std::remove_cvref_t<Type>> and Traits::IsAnyOf<Cxx::Traits::RemoveAllSymbols<Type>, char, int8_t, uint8_t, wchar_t, char8_t, char16_t, char32_t> )
           {
-            return BooleanString(*Value != 0);
+            return BooleanString(*value != 0);
           }
           else if constexpr ( std::is_array_v<std::remove_cvref_t<Type>> and Traits::IsAnyOf<Cxx::Traits::RemoveAllSymbols<Type>, char, int8_t, uint8_t, wchar_t, char8_t, char16_t, char32_t> )
           {
-            return BooleanString(Value[0] != 0);
+            return BooleanString(value[0] != 0);
           }
           else if constexpr ( std::is_arithmetic_v<std::remove_cvref_t<Type>> )
           {
-            return BooleanString(!!Value);
+            return BooleanString(!!value);
           }
-          else if constexpr ( requires { Value.operator bool(); } )
+          else if constexpr ( requires { value.operator bool(); } )
           {
-            return BooleanString(Value.operator bool());
+            return BooleanString(value.operator bool());
           }
-          else if constexpr ( requires { Value.operator!(); } )
+          else if constexpr ( requires { value.operator!(); } )
           {
-            return BooleanString(!Value.operator!());
+            return BooleanString(!value.operator!());
           }
-          else if constexpr ( requires { Value.empty(); } )
+          else if constexpr ( requires { value.empty(); } )
           {
-            return BooleanString(!Value.empty());
+            return BooleanString(!value.empty());
           }
-          else if constexpr ( requires { Value.size(); } )
+          else if constexpr ( requires { value.size(); } )
           {
-            return BooleanString(Value.size() != 0);
+            return BooleanString(value.size() != 0);
           }
-          else if constexpr ( requires { std::size(Value); } )
+          else if constexpr ( requires { std::size(value); } )
           {
-            return BooleanString(std::size(Value) != 0);
+            return BooleanString(std::size(value) != 0);
           }
-          else if constexpr ( requires { Value.has_value(); } )
+          else if constexpr ( requires { value.has_value(); } )
           {
-            return Value.has_value();
+            return value.has_value();
           }
-          else if constexpr ( std::is_pointer_v<std::remove_cvref_t<Type>> and requires { *Value; } )
+          else if constexpr ( std::is_pointer_v<std::remove_cvref_t<Type>> and requires { *value; } )
           {
-            if ( Value != nullptr )
+            if ( value != nullptr )
             {
-              return operator()(*Value);
+              return this->operator()(*value);
             }
             else
             {
               return BooleanString(false);
             }
           }
-          else if constexpr ( requires { Value != nullptr; } )
+          else if constexpr ( requires { value != nullptr; } )
           {
-            return BooleanString(Value != nullptr);
+            return BooleanString(value != nullptr);
           }
           else
           {
@@ -161,6 +162,8 @@ namespace Cxx::LINQ::MethodSyntax
     };
   } // namespace PropertyDetails
 
+  template <std::ranges::range RangeType>
+  inline constexpr PropertyDetails::ToImplementation<RangeType> To;
   inline constexpr PropertyDetails::LengthImplementation        Count;
   inline constexpr PropertyDetails::LengthImplementation        Size;
   inline constexpr PropertyDetails::LengthImplementation        Length;
@@ -169,30 +172,27 @@ namespace Cxx::LINQ::MethodSyntax
   inline constexpr PropertyDetails::BooleanStringImplementation BooleanString;
 
   template <std::ranges::range RangeType>
-  inline constexpr PropertyDetails::ToImplementation<RangeType> To;
-
-  template <std::ranges::range RangeType>
   auto As()
   {
-    return []<typename Type>(Type&& Value)
+    return []<typename Type>(Type&& value)
     {
-      return RangeType(Value.begin(), Value.end());
+      return RangeType(value.begin(), value.end());
     };
   }
 
   template <typename FunctionType>
   auto Select(FunctionType&& Selector)
   {
-    return [&]<std::ranges::range RangeType>(RangeType&& Values) // clang-format off
+    return [&]<std::ranges::range RangeType>(RangeType&& values) // clang-format off
     -> Generator<decltype(
         std::declval<FunctionType>()(
           std::declval<typename Traits::TemplateTraits<RangeType>::ElementType>()
         )
        )> // clang-format on
     {
-      for ( auto&& Value : Values )
+      for ( auto&& value : values )
       {
-        co_yield Selector(Value);
+        co_yield Selector(value);
       }
     };
   }
@@ -205,19 +205,19 @@ namespace Cxx::LINQ::MethodSyntax
 
   auto ToString()
   {
-    return [](auto&& Value)
+    return [](auto&& value)
     {
-      if constexpr ( requires { Value.to_string(); } )
+      if constexpr ( requires { value.to_string(); } )
       {
-        return Value.to_string();
+        return value.to_string();
       }
-      else if constexpr ( requires { Value.ToString(); } )
+      else if constexpr ( requires { value.ToString(); } )
       {
-        return Value.ToString();
+        return value.ToString();
       }
       else
       {
-        return std::to_string(Value);
+        return std::to_string(value);
       }
     };
   }

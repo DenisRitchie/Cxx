@@ -223,8 +223,8 @@ namespace Cxx::Traits::TypeParameters::inline V2
       static_assert(CheckArgs(), "All argument indices must be greater than or equal to zero and less than the maximum number of arguments of type template");
   };
 
-  template <template <typename...> class TemplateType, typename... Types, size_t... ArgIndex>
-  struct ReplaceArguments<TemplateType<Types...>, Arguments<Arg<ArgIndex, Types>...>> : ReplaceArguments<TemplateType<Types...>, Arg<ArgIndex, Types>...>
+  template <template <typename...> class TemplateType, typename... Types, size_t... ArgIndex, typename... ArgType>
+  struct ReplaceArguments<TemplateType<Types...>, Arguments<Arg<ArgIndex, ArgType>...>> : ReplaceArguments<TemplateType<Types...>, Arg<ArgIndex, ArgType>...>
   {
   };
 } // namespace Cxx::Traits::TypeParameters::inline V2

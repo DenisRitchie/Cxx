@@ -131,3 +131,35 @@ TEST(TypeTraitsTests, TypeParameters_V2_ReplaceArguments)
   EXPECT_EQ(typeid(std::tuple_element_t<5, NewTuple>), typeid(char32_t));
 }
 
+TEST(TypeTraitsTests, TemplateTraits)
+{
+  EXPECT_TRUE((std::same_as<Cxx::Traits::TemplateTraits<std::string>::Template, std::string>));
+  EXPECT_TRUE((std::same_as<Cxx::Traits::TemplateTraits<std::string>::ElementType, std::string::value_type>));
+  EXPECT_TRUE((std::same_as<Cxx::Traits::TemplateTraits<std::string>::TypeParameters, Cxx::Traits::TypeParameters::Arguments<char, std::char_traits<char>, std::allocator<char>>>));
+  EXPECT_TRUE((std::same_as<Cxx::Traits::TemplateTraits<std::string>::TypeParameter<0>, std::string::value_type>));
+  EXPECT_TRUE((std::same_as<Cxx::Traits::TemplateTraits<std::string>::TypeParameter<1>, std::string::traits_type>));
+  EXPECT_TRUE((std::same_as<Cxx::Traits::TemplateTraits<std::string>::TypeParameter<2>, std::string::allocator_type>));
+
+  EXPECT_TRUE((std::same_as<Cxx::Traits::TypeParameters::ArgPack<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>::ArgumentIndex<0>::Type, char16_t>));
+  EXPECT_TRUE((std::same_as<Cxx::Traits::TypeParameters::ArgPack<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>::ArgumentIndex<1>::Type, std::char_traits<char16_t>>));
+  EXPECT_TRUE((std::same_as<Cxx::Traits::TypeParameters::ArgPack<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>::ArgumentIndex<2>::Type, std::allocator<char16_t>>));
+
+  EXPECT_TRUE((std::same_as<Cxx::Traits::TemplateTraits<std::string>::Rebind<char16_t, std::char_traits<char16_t>, std::allocator<char16_t>>, std::u16string>));
+}
+
+TEST(TypeTraitsTests, RemoveAllSymbols)
+{
+  EXPECT_TRUE((std::same_as<int32_t, Cxx::Traits::RemoveAllSymbols<int32_t[]>>));
+  EXPECT_TRUE((std::same_as<int32_t, Cxx::Traits::RemoveAllSymbols<int32_t*>>));
+  EXPECT_TRUE((std::same_as<int32_t, Cxx::Traits::RemoveAllSymbols<int32_t&>>));
+  EXPECT_TRUE((std::same_as<int32_t, Cxx::Traits::RemoveAllSymbols<int32_t&&>>));
+  EXPECT_TRUE((std::same_as<int32_t, Cxx::Traits::RemoveAllSymbols<int32_t*&>>));
+  EXPECT_TRUE((std::same_as<int32_t, Cxx::Traits::RemoveAllSymbols<int32_t(&)[]>>));
+  EXPECT_TRUE((std::same_as<int32_t(), Cxx::Traits::RemoveAllSymbols<int32_t (*)(void)>>));
+  EXPECT_TRUE((std::same_as<size_t (std::string::*)(), Cxx::Traits::RemoveAllSymbols<size_t (std::string::*)()>>));
+  EXPECT_TRUE((std::same_as<int32_t, Cxx::Traits::RemoveAllSymbols<const volatile int32_t>>));
+  EXPECT_TRUE((std::same_as<int32_t, Cxx::Traits::RemoveAllSymbols<const volatile int32_t&>>));
+  EXPECT_TRUE((std::same_as<int32_t, Cxx::Traits::RemoveAllSymbols<const volatile int32_t*>>));
+  EXPECT_TRUE((std::same_as<int32_t, Cxx::Traits::RemoveAllSymbols<const volatile int32_t*&>>));
+  EXPECT_TRUE((std::same_as<int32_t, Cxx::Traits::RemoveAllSymbols<const volatile int32_t(*const volatile)[]>>));
+}
