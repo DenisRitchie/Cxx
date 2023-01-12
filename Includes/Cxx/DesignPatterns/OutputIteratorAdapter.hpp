@@ -1,28 +1,23 @@
+// https://www.fluentcpp.com/2020/11/06/how-to-make-a-copyable-object-assignable-in-cpp/
+// https://www.fluentcpp.com/2020/10/02/how-to-implement-operator-when-a-data-member-is-a-lambda/
+
 #ifndef C1FFA0CD_B02C_44A3_8388_648C125FE042
 #define C1FFA0CD_B02C_44A3_8388_648C125FE042
 
 #include "Cxx/FunctionTraits.hpp"
+#include "Cxx/SemiRegularBox.hpp"
+#include <optional>
 
 namespace Cxx::DesignPatterns
 {
-  namespace Details
-  {
-    // clang-format off
-
-    template <typename Function>
-    concept CallableContainer = std::is_invocable_v<Function> and Traits::FunctionTraits<Function>::ArgumentCount == Traits::NumberOfArguments<1>;
-
-    // clang-format on
-  } // namespace Details
-
-  template <Details::CallableContainer CallableContainer>
+  template <typename CallableContainer>
   class OutputIteratorAdapter
   {
     public:
       using ContainerType    = CallableContainer;
       using IteratorCategory = std::output_iterator_tag;
       using IteratorConcept  = std::output_iterator_tag;
-      using ValueType        = Traits::FunctionTraits<ContainerType>::Argument<0>;
+      using ValueType        = Cxx::Traits::RemoveAllSymbols<typename Traits::FunctionTraits<ContainerType>::template Argument<0>>;
       using Pointer          = ValueType*;
       using ConstPointer     = const ValueType*;
       using Reference        = ValueType&;
@@ -48,7 +43,7 @@ namespace Cxx::DesignPatterns
       // clang-format on
 
       OutputIteratorAdapter(ContainerType&& callback) noexcept
-        : Callback{ std::forward<ContainerType>(callback) }
+        : Callback(std::move(callback))
       {
       }
 
@@ -65,8 +60,20 @@ namespace Cxx::DesignPatterns
       }
 
     private:
-      ContainerType Callback;
+      Helpers::semiregular_box_t<ContainerType> Callback;
   };
+
+  template <typename CallableContainer>
+  OutputIteratorAdapter<CallableContainer> MakeOutputIterator(CallableContainer&& function) noexcept
+  {
+    return OutputIteratorAdapter<CallableContainer>{ function };
+  }
+
+  template <typename CallableContainer, typename... ArgumentType>
+  OutputIteratorAdapter<CallableContainer> MakeOutputIterator(ArgumentType&&... arguments) noexcept
+  {
+    return OutputIteratorAdapter<CallableContainer>{ CallableContainer(std::forward<ArgumentType>(arguments)...) };
+  }
 } // namespace Cxx::DesignPatterns
 
 #endif /* C1FFA0CD_B02C_44A3_8388_648C125FE042 */

@@ -106,7 +106,7 @@ namespace Cxx
       struct iterator
       {
           using iterator_category = std::input_iterator_tag;
-          using iterator_concept  = std::forward_iterator_tag;
+          using iterator_concept  = std::input_iterator_tag;
           using value_type        = T;
           using difference_type   = ptrdiff_t;
           using pointer           = const T*;
@@ -122,7 +122,7 @@ namespace Cxx
             return !(*this == other);
           }
 
-          iterator  operator++(int) = delete;
+          iterator operator++(int) = delete;
 
           iterator& operator++()
           {

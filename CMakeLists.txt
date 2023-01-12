@@ -39,6 +39,7 @@ target_sources(${PROJECT_NAME}
         Includes/Cxx/Platform.hpp
         Includes/Cxx/Reference.hpp
         Includes/Cxx/SemanticValue.hpp
+        Includes/Cxx/SemiRegularBox.hpp
         Includes/Cxx/TypeTraits.hpp
         Includes/Cxx/Exceptions/IOException.hpp
         Includes/Cxx/Exceptions/UnstableIteratorException.hpp
