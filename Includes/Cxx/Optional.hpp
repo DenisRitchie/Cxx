@@ -1,76 +1,56 @@
 #ifndef BEAE9345_441A_49A7_AB8A_28C3C1F463AD
 #define BEAE9345_441A_49A7_AB8A_28C3C1F463AD
 
-#include <optional>
-#include <concepts>
-
 #include "Platform.hpp"
+#include "Utility.hpp"
+
+#include <optional>
 
 namespace Cxx
 {
   template <typename Type>
   struct Optional : public std::optional<Type>
   {
-      using BaseType = std::optional<Type>;
-
-      using BaseType::optional;
-      using BaseType::operator=;
+      using base_type = std::optional<Type>;
+      using std::optional<Type>::optional;
+      using std::optional<Type>::operator=;
 
 #if defined(__cpp_explicit_this_parameter) and defined(__cpp_multidimensional_subscript)
-      template <typename Self, std::integral... Indexes>
-      constexpr decltype(auto) operator[](this Self&& This, const Indexes... Index)
+      template <typename Self, std::integral... Index>
+      constexpr decltype(auto) operator[](this Self&& self, const Index... indices)
+      requires requires { self->operator[](indices...); }
       {
-        if constexpr ( requires { This->operator[](Index...); } )
-        {
-          return This->operator[](Index...);
-        }
-        else
-        {
-          return This.operator*().operator[](Index...);
-        }
+        return self->operator[](indices...);
       }
-
 #endif
 
 #ifdef __cpp_explicit_this_parameter
       template <typename Self>
-      constexpr decltype(auto) operator*(this Self&& This)
+      constexpr decltype(auto) operator*(this Self&& self)
       {
-        if constexpr ( requires { *This.value(); } )
-        {
-          return *This.value();
-        }
-        else if constexpr ( requires { *This.value().get(); } )
-        {
-          return *This.value().get();
-        }
-        else if constexpr ( requires { This.value().get(); } )
-        {
-          return This.value().get();
-        }
-        else if constexpr ( requires { This->operator*(); } )
-        {
-          return This->operator*();
-        }
-        else
-        {
-          return This.BaseType::operator*();
-        }
-      }
+        if ( not self.has_value() )
+          throw std::bad_optional_access{};
 
+        return Cxx::Utilities::deep_smart_pointer_dereference(self.base_type::operator->());
+      }
 #endif
 
 #ifdef __cpp_explicit_this_parameter
       template <typename Self>
-      constexpr decltype(auto) operator->(this Self&& This)
+      constexpr decltype(auto) operator->(this Self&& self)
       {
-        if constexpr ( requires { This.value().operator->(); } )
+        using Cxx::Utilities::deep_raw_pointer_dereference;
+
+        if ( not self.has_value() )
+          throw std::bad_optional_access{};
+
+        if constexpr ( requires { deep_raw_pointer_dereference(self.base_type::operator->()).operator->(); } )
         {
-          return This.value();
+          return deep_raw_pointer_dereference(self.base_type::operator->());
         }
         else
         {
-          return This.BaseType::operator->();
+          return &deep_raw_pointer_dereference(self.base_type::operator->());
         }
       }
 #endif

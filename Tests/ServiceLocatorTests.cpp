@@ -87,7 +87,7 @@ TEST(ServiceLocatorTest, LocalInstance)
   EXPECT_EQ(Locator.GetService<std::shared_ptr<std::string>>()->compare(std::string(30, '*')), 0);
   EXPECT_EQ(Locator.Resolve<std::shared_ptr<std::string>>()->compare(std::string(30, '*')), 0);
 
-  Locator.Resolve<std::shared_ptr<std::string>>().operator->().operator->() = std::make_shared<std::string>("Hola");
+  Locator.Resolve<std::shared_ptr<std::string>>().operator->()->assign("Hola");
   EXPECT_EQ(*Locator.Resolve<std::shared_ptr<std::string>>(), "Hola"s);
 
   Locator.GetService<int32_t>() += 100;
@@ -146,7 +146,7 @@ TEST(ServiceLocatorTest, GlobalService)
   EXPECT_EQ(ServiceLocator::Default().GetService<std::shared_ptr<std::string>>()->compare(std::string(30, '*')), 0);
   EXPECT_EQ(ServiceLocator::Default().Resolve<std::shared_ptr<std::string>>()->compare(std::string(30, '*')), 0);
 
-  ServiceLocator::Default().Resolve<std::shared_ptr<std::string>>().operator->().operator->() = std::make_shared<std::string>("Hola");
+  ServiceLocator::Default().Resolve<std::shared_ptr<std::string>>().operator->()->assign("Hola");
   EXPECT_EQ(*ServiceLocator::Default().Resolve<std::shared_ptr<std::string>>(), "Hola"s);
 
   ServiceLocator::Default().GetService<int32_t>() += 100;
@@ -162,11 +162,9 @@ TEST(ServiceLocatorTest, GlobalService)
 
   ServiceLocator::Default().Register<IService, Service>("Constructor Arguments Example");
   EXPECT_EQ(ServiceLocator::Default().GetService<IService>().GetValue(), "Constructor Arguments Example"sv);
-  EXPECT_EQ(ServiceLocator::Default().Resolve<IService>().operator->().operator->()->GetValue(), "Constructor Arguments Example"sv);
+  EXPECT_EQ(ServiceLocator::Default().Resolve<IService>().operator->()->GetValue(), "Constructor Arguments Example"sv);
 
-  ServiceLocator::Default().InvokeFactory<PersonFactory, ServiceFactory>(
-    StringFactory, Int32Factory, []() -> SemanticValue<std::string_view> { return "Text"sv; }
-  );
+  ServiceLocator::Default().InvokeFactory<PersonFactory, ServiceFactory>(StringFactory, Int32Factory, []() -> SemanticValue<std::string_view> { return "Text"sv; });
   ServiceLocator::Default().InvokeFactory([]() -> SemanticValue<std::vector<int32_t>> { return std::vector{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }; });
 
   EXPECT_EQ(ServiceLocator::Default().Resolve<IService>()->GetValue(), "IService.Value"sv);

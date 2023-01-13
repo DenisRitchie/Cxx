@@ -157,7 +157,10 @@ TEST(OptionalTests, ChainInvocationArrowOperator)
 
     for ( int32_t index = -1; const char letter : { 'T', 'e', 's', 't', ' ', 'D', 'a', 't', 'a' } )
     {
-      EXPECT_EQ(data6[++index], letter);
+      ++index;
+
+      EXPECT_EQ(data6.operator->().operator->().operator->().operator->().operator->().operator->().operator->().operator->()->operator[](index), letter);
+      EXPECT_EQ(data6[index], letter);
     }
 
     for ( int32_t index = -1; const int32_t value                                                          //

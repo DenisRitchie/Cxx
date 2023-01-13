@@ -41,6 +41,7 @@ target_sources(${PROJECT_NAME}
         Includes/Cxx/SemanticValue.hpp
         Includes/Cxx/SemiRegularBox.hpp
         Includes/Cxx/TypeTraits.hpp
+        Includes/Cxx/Utility.hpp
         Includes/Cxx/Exceptions/IOException.hpp
         Includes/Cxx/Exceptions/UnstableIteratorException.hpp
         Includes/Cxx/DesignPatterns/CuriouslyRecurringTemplatePattern.hpp
