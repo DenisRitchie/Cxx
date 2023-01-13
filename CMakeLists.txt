@@ -43,13 +43,13 @@ target_sources(${PROJECT_NAME}
         Includes/Cxx/TypeTraits.hpp
         Includes/Cxx/Exceptions/IOException.hpp
         Includes/Cxx/Exceptions/UnstableIteratorException.hpp
-        Includes/Cxx/DesignPatterns/OutputIteratorAdapter.hpp
+        Includes/Cxx/DesignPatterns/CuriouslyRecurringTemplatePattern.hpp
+        Includes/Cxx/DesignPatterns/InputIterator.hpp
+        Includes/Cxx/DesignPatterns/OutputIterator.hpp
         Includes/Cxx/DesignPatterns/ServiceLocator.hpp
-        Includes/Cxx/String.hpp
 
     PUBLIC
         Sources/Cxx/DesignPatterns/ServiceLocator.cpp
-        Sources/Cxx/String.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC c_std_17 cxx_std_23)

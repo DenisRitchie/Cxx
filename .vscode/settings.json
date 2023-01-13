@@ -13,6 +13,9 @@
     "editor.useTabStops": true,
     "editor.tabCompletion": "on",
     "explorer.compactFolders": false,
+    "git.ignoredRepositories": [
+        "googletest"
+    ],
     "workbench.tree.indent": 20,
     "workbench.tree.expandMode": "doubleClick",
     "workbench.tree.renderIndentGuides": "always",

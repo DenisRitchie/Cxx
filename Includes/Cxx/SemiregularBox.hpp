@@ -11,129 +11,37 @@
 #include <functional>
 #include <utility>
 
-// clang-format off
-
-#define CPP_PP_CAT_(X, ...)  X ## __VA_ARGS__
-#define CPP_PP_CAT(X, ...)   CPP_PP_CAT_(X, __VA_ARGS__)
-
-#define CPP_PP_EVAL_(X, ARGS) X ARGS
-#define CPP_PP_EVAL(X, ...) CPP_PP_EVAL_(X, (__VA_ARGS__))
-
-#define CPP_PP_EVAL2_(X, ARGS) X ARGS
-#define CPP_PP_EVAL2(X, ...) CPP_PP_EVAL2_(X, (__VA_ARGS__))
-
-#define CPP_PP_EXPAND(...) __VA_ARGS__
-#define CPP_PP_EAT(...)
-
-#define CPP_PP_FIRST(LIST) CPP_PP_FIRST_ LIST
-#define CPP_PP_FIRST_(...) __VA_ARGS__ CPP_PP_EAT
-
-#define CPP_PP_SECOND(LIST) CPP_PP_SECOND_ LIST
-#define CPP_PP_SECOND_(...) CPP_PP_EXPAND
-
-#define CPP_PP_CHECK(...) CPP_PP_EXPAND(CPP_PP_CHECK_N(__VA_ARGS__, 0,))
-#define CPP_PP_CHECK_N(x, n, ...) n
-#define CPP_PP_PROBE(x) x, 1,
-#define CPP_PP_PROBE_N(x, n) x, n,
-
-// CPP_auto_fun
-// Usage:
-//   template <typename A, typename B>
-//   auto CPP_auto_fun(foo)(A a, B b)([const]opt [noexcept(cond)]opt)opt
-//   (
-//       return a + b
-//   )
-#define CPP_auto_fun(X) X CPP_AUTO_FUN_IMPL_
-
-/// INTERNAL ONLY
-#define CPP_AUTO_FUN_IMPL_(...) (__VA_ARGS__) CPP_AUTO_FUN_RETURNS_
-
-/// INTERNAL ONLY
-#define CPP_AUTO_FUN_RETURNS_(...)                                              \
-    CPP_PP_EVAL2_(                                                              \
-        CPP_AUTO_FUN_SELECT_RETURNS_,                                           \
-        (__VA_ARGS__,)                                                          \
-    )(__VA_ARGS__)
-
-/// INTERNAL ONLY
-#define CPP_AUTO_FUN_SELECT_RETURNS_(MAYBE_CONST, ...)                          \
-    CPP_PP_CAT(CPP_AUTO_FUN_RETURNS_CONST_,                                     \
-        CPP_PP_EVAL(CPP_PP_CHECK, CPP_PP_CAT(                                   \
-            CPP_PP_PROBE_CONST_MUTABLE_PROBE_, MAYBE_CONST)))
-
-/// INTERNAL ONLY
-#define CPP_PP_PROBE_CONST_MUTABLE_PROBE_const CPP_PP_PROBE_N(~, 1)
-
-/// INTERNAL ONLY
-#define CPP_PP_PROBE_CONST_MUTABLE_PROBE_mutable CPP_PP_PROBE_N(~, 2)
-
-/// INTERNAL ONLY
-#define CPP_PP_EAT_MUTABLE_mutable
-
-/// INTERNAL ONLY
-#define CPP_AUTO_FUN_RETURNS_CONST_2(...)                                       \
-    CPP_PP_CAT(CPP_PP_EAT_MUTABLE_, __VA_ARGS__) CPP_AUTO_FUN_RETURNS_CONST_0
-
-/// INTERNAL ONLY
-#define CPP_AUTO_FUN_RETURNS_CONST_1(...)                                       \
-    __VA_ARGS__ CPP_AUTO_FUN_RETURNS_CONST_0
-
-/// INTERNAL ONLY
-#define CPP_AUTO_FUN_RETURNS_CONST_0(...)                                       \
-    CPP_PP_EVAL(CPP_AUTO_FUN_DECLTYPE_NOEXCEPT_,                                \
-        CPP_PP_CAT(CPP_AUTO_FUN_RETURNS_, __VA_ARGS__))
-
-/// INTERNAL ONLY
-#define CPP_AUTO_FUN_RETURNS_return
-
-#ifdef __cpp_guaranteed_copy_elision
-/// INTERNAL ONLY
-#define CPP_AUTO_FUN_DECLTYPE_NOEXCEPT_(...)                                    \
-    noexcept(noexcept(__VA_ARGS__)) -> decltype(__VA_ARGS__)                    \
-    { return (__VA_ARGS__); }
-
-#else
-/// INTERNAL ONLY
-#define CPP_AUTO_FUN_DECLTYPE_NOEXCEPT_(...)                                    \
-    noexcept(noexcept(decltype(__VA_ARGS__)(__VA_ARGS__))) ->                   \
-    decltype(__VA_ARGS__)                                                       \
-    { return (__VA_ARGS__); }
-
-#endif
-
-// clang-format on
-
-namespace Cxx::Helpers
+namespace Cxx
 {
   template <typename T>
   struct semiregular_box;
 
-  namespace detail
+  namespace Details
   {
     struct semiregular_get
     {
-        // clang-format off
-        template<typename T>
-        friend auto CPP_auto_fun(get)(std::type_identity_t<semiregular_box<T>> &t)
-        (
-            return t.get()
-        )
-        template<typename T>
-        friend auto CPP_auto_fun(get)(std::type_identity_t<semiregular_box<T>> const &t)
-        (
-            return t.get()
-        )
-        template<typename T>
-        friend auto CPP_auto_fun(get)(std::type_identity_t<semiregular_box<T>> &&t)
-        (
-            return std::move(t).get()
-        )
-        // clang-format on
+        template <typename T>
+        friend auto get(std::type_identity_t<semiregular_box<T>>& t) noexcept(noexcept(t.get())) -> decltype(t.get())
+        {
+          return (t.get());
+        }
+
+        template <typename T>
+        friend auto get(const std::type_identity_t<semiregular_box<T>>& t) noexcept(noexcept(t.get())) -> decltype(t.get())
+        {
+          return (t.get());
+        }
+
+        template <typename T>
+        friend auto get(std::type_identity_t<semiregular_box<T>>&& t) noexcept(noexcept(std::move(t).get())) -> decltype(std::move(t).get())
+        {
+          return (std::move(t).get());
+        }
     };
-  } // namespace detail
+  } // namespace Details
 
   template <typename T>
-  struct semiregular_box : private detail::semiregular_get
+  struct semiregular_box : private Details::semiregular_get
   {
     private:
       struct tag
@@ -332,7 +240,7 @@ namespace Cxx::Helpers
   };
 
   template <typename T>
-  struct semiregular_box<T&> : private std::reference_wrapper<T&>, private detail::semiregular_get
+  struct semiregular_box<T&> : private std::reference_wrapper<T&>, private Details::semiregular_get
   {
       semiregular_box() = default;
 
@@ -360,7 +268,7 @@ namespace Cxx::Helpers
   };
 
   template <typename T>
-  struct semiregular_box<T&&> : private std::reference_wrapper<T&&>, private detail::semiregular_get
+  struct semiregular_box<T&&> : private std::reference_wrapper<T&&>, private Details::semiregular_get
   {
       semiregular_box() = default;
 
@@ -397,6 +305,6 @@ namespace Cxx::Helpers
       /*True Case*/ std::conditional_t<IsConst || std::is_empty<T>::value, T, std::reference_wrapper<T>>,
       /*False Case*/ std::reference_wrapper<std::conditional_t<IsConst, const semiregular_box<T>, semiregular_box<T>>>>;
 
-} // namespace Cxx::Helpers
+} // namespace Cxx
 
 #endif /* C111AE61_3931_49D2_B028_97DAB4966DE9 */

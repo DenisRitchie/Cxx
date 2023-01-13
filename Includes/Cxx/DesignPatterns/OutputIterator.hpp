@@ -6,7 +6,8 @@
 
 #include "Cxx/FunctionTraits.hpp"
 #include "Cxx/SemiRegularBox.hpp"
-#include <optional>
+
+#include <iterator>
 
 namespace Cxx::DesignPatterns
 {
@@ -60,13 +61,13 @@ namespace Cxx::DesignPatterns
       }
 
     private:
-      Helpers::semiregular_box_t<ContainerType> Callback;
+      semiregular_box_t<ContainerType> Callback;
   };
 
   template <typename CallableContainer>
   OutputIteratorAdapter<CallableContainer> MakeOutputIterator(CallableContainer&& function) noexcept
   {
-    return OutputIteratorAdapter<CallableContainer>{ function };
+    return OutputIteratorAdapter<CallableContainer>{ std::forward<CallableContainer>(function) };
   }
 
   template <typename CallableContainer, typename... ArgumentType>
