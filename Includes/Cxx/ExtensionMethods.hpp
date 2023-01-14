@@ -7,8 +7,8 @@
 #include <locale>
 #include <utility>
 
-#include "Generator.hpp"
-#include "TypeTraits.hpp"
+#include "FunctionTraits.hpp"
+#include "Coroutines/Generator.hpp"
 
 namespace Cxx
 {
@@ -174,7 +174,7 @@ namespace Cxx::LINQ::MethodSyntax
   template <std::ranges::range RangeType>
   auto As()
   {
-    return []<typename Type>(Type&& value)
+    return [](auto&& value)
     {
       return RangeType(value.begin(), value.end());
     };
@@ -183,12 +183,9 @@ namespace Cxx::LINQ::MethodSyntax
   template <typename FunctionType>
   auto Select(FunctionType&& Selector)
   {
-    return [&]<std::ranges::range RangeType>(RangeType&& values) // clang-format off
-    -> Generator<decltype(
-        std::declval<FunctionType>()(
-          std::declval<typename Traits::TemplateTraits<RangeType>::ElementType>()
-        )
-       )> // clang-format on
+    using return_type = Coroutines::Generator<typename Traits::FunctionTraits<FunctionType>::ReturnType>;
+
+    return [&](std::ranges::range auto&& values) -> return_type
     {
       for ( auto&& value : values )
       {

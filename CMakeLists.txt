@@ -33,7 +33,6 @@ target_sources(${PROJECT_NAME}
         Includes/Cxx/DetectionIdiom.hpp
         Includes/Cxx/ExtensionMethods.hpp
         Includes/Cxx/FunctionTraits.hpp
-        Includes/Cxx/Generator.hpp
         Includes/Cxx/IteratorTraits.hpp
         Includes/Cxx/Optional.hpp
         Includes/Cxx/Platform.hpp
@@ -42,6 +41,8 @@ target_sources(${PROJECT_NAME}
         Includes/Cxx/SemiRegularBox.hpp
         Includes/Cxx/TypeTraits.hpp
         Includes/Cxx/Utility.hpp
+        Includes/Cxx/Coroutines/Future.hpp
+        Includes/Cxx/Coroutines/Generator.hpp
         Includes/Cxx/Exceptions/IOException.hpp
         Includes/Cxx/Exceptions/UnstableIteratorException.hpp
         Includes/Cxx/DesignPatterns/CuriouslyRecurringTemplatePattern.hpp

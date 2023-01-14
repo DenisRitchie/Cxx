@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "Cxx/Generator.hpp"
 #include "Cxx/ExtensionMethods.hpp"
 #include "Cxx/TypeTraits.hpp"
 

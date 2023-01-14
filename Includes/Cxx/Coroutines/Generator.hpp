@@ -5,34 +5,46 @@
 #include <coroutine>
 #include <stdexcept>
 #include <variant>
+#include <ranges>
 
 // https://github.com/lewissbaker/cppcoro
 // https://en.cppreference.com/w/cpp/language/coroutines
+// https://en.cppreference.com/w/cpp/header/generator
 // https://learn.microsoft.com/en-us/archive/msdn-magazine/2017/october/c-from-algorithms-to-coroutines-in-c
 
-namespace Cxx
+namespace Cxx::Coroutines
 {
   template <typename T>
-  struct Generator
+  struct [[nodiscard]] Generator : public std::ranges::view_interface<Generator<T>>
   {
+      struct iterator;
+
+      using value_type      = std::remove_reference_t<T>;
+      using reference       = value_type&;
+      using const_reference = const value_type&;
+      using iterator        = iterator;
+      using const_iterator  = iterator;
+      using difference_type = std::ptrdiff_t;
+      using size_type       = std::size_t;
+
       struct promise_type
       {
-          promise_type& get_return_object()
+          promise_type& get_return_object() noexcept
           {
             return *this;
           }
 
-          std::suspend_always initial_suspend()
+          std::suspend_always initial_suspend() const noexcept
           {
             return {};
           }
 
-          std::suspend_always final_suspend() noexcept
+          std::suspend_always final_suspend() const noexcept
           {
             return {};
           }
 
-          std::suspend_always yield_value(const T& other)
+          std::suspend_always yield_value(const T& other) noexcept
           {
             value = std::addressof(other);
             return {};
@@ -105,12 +117,14 @@ namespace Cxx
 
       struct iterator
       {
+          using value_type        = std::remove_reference_t<T>;
+          using pointer           = value_type*;
+          using const_pointer     = const value_type*;
+          using reference         = value_type&;
+          using const_reference   = const value_type&;
+          using difference_type   = std::ptrdiff_t;
           using iterator_category = std::input_iterator_tag;
           using iterator_concept  = std::input_iterator_tag;
-          using value_type        = T;
-          using difference_type   = ptrdiff_t;
-          using pointer           = const T*;
-          using reference         = const T&;
 
           bool operator==(const iterator& other) const
           {
@@ -122,7 +136,10 @@ namespace Cxx
             return !(*this == other);
           }
 
-          iterator operator++(int) = delete;
+          void operator++(int)
+          {
+            (void)operator++();
+          }
 
           iterator& operator++()
           {
@@ -175,6 +192,6 @@ namespace Cxx
       }
   };
 
-} // namespace Cxx
+} // namespace Cxx::Coroutines
 
 #endif /* AA77ADD6_B5B4_40A9_9DCB_EBBAC4AC5AB2 */
