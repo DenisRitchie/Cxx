@@ -68,6 +68,7 @@
     "files.associations": {
         "*.php": "php",
         "*.rh": "cpp",
+        "*.tcc": "cpp",
         "*.yml": "dockercompose",
         ".clang-tidy": "yaml",
         ".clang-format": "yaml",
@@ -186,7 +187,9 @@
         "stacktrace": "cpp",
         "strstream": "cpp",
         "syncstream": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "generator": "cpp",
+        "resumable": "cpp"
     },
     "C_Cpp.files.exclude": {
         "**/.vscode": true,

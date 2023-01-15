@@ -20,7 +20,7 @@ namespace Cxx::Coroutines
 // by using a std::promise<T> as the promise type.
 template <typename T, typename... Args>
 requires(!std::is_void_v<T> && !std::is_reference_v<T>)
-struct std::coroutine_traits<std::future<T>, Cxx::Coroutines::as_coroutine, Args...>
+struct std::coroutine_traits<std::future<T>, Args...>
 {
     struct promise_type : std::promise<T>
     {
@@ -58,7 +58,7 @@ struct std::coroutine_traits<std::future<T>, Cxx::Coroutines::as_coroutine, Args
 
 // Same for std::future<void>.
 template <typename... Args>
-struct std::coroutine_traits<std::future<void>, Cxx::Coroutines::as_coroutine, Args...>
+struct std::coroutine_traits<std::future<void>, Args...>
 {
     struct promise_type : std::promise<void>
     {
@@ -103,13 +103,13 @@ auto operator co_await(std::future<T> future) noexcept
         return this->wait_for(0s) != std::future_status::timeout;
       }
 
-      void await_suspend(std::coroutine_handle<> cont) const
+      void await_suspend(std::coroutine_handle<> handle) const
       {
         std::thread(
-          [this, cont]
+          [this, handle]
           {
             this->wait();
-            cont();
+            handle.resume();
           }
         ).detach();
       }

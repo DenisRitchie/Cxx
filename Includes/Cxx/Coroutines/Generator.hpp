@@ -1,10 +1,9 @@
 #ifndef AA77ADD6_B5B4_40A9_9DCB_EBBAC4AC5AB2
 #define AA77ADD6_B5B4_40A9_9DCB_EBBAC4AC5AB2
 
-#include <concepts>
 #include <coroutine>
 #include <stdexcept>
-#include <variant>
+#include <memory>
 #include <ranges>
 
 // https://github.com/lewissbaker/cppcoro
@@ -14,110 +13,48 @@
 
 namespace Cxx::Coroutines
 {
-  template <typename T>
-  struct [[nodiscard]] Generator : public std::ranges::view_interface<Generator<T>>
+  template <typename Type, typename Alloc = std::allocator<std::byte>>
+  class [[nodiscard]] Generator : public std::ranges::view_interface<Generator<Type, Alloc>>
   {
-      struct iterator;
+    public:
+      struct promise_type
+      {
+          using alloc_byte = typename std::allocator_traits<Alloc>::template rebind_alloc<std::byte>;
 
-      using value_type      = std::remove_reference_t<T>;
+          static_assert(std::is_same_v<std::byte*, typename std::allocator_traits<alloc_byte>::pointer>, "generator does not support allocators with fancy pointer types");
+          static_assert(std::allocator_traits<alloc_byte>::is_always_equal::value && std::is_default_constructible_v<alloc_byte>, "generator supports only stateless allocators");
+
+          const Type*        m_value;
+          std::exception_ptr m_exception;
+
+          static Generator    get_return_object_on_allocation_failure() noexcept;
+          Generator           get_return_object() noexcept;
+          std::suspend_always initial_suspend() const noexcept;
+          std::suspend_always final_suspend() const noexcept;
+          std::suspend_always yield_value(const Type& value) noexcept;
+          void                return_void() const noexcept;
+          void                unhandled_exception() noexcept;
+          void                rethrow_if_exception();
+
+          template <class U>
+          U&& await_transform(U&& whatever) noexcept;
+
+          static void* operator new(std::size_t size);
+          static void  operator delete(void* pointer, std::size_t size) noexcept;
+      };
+
+    public:
+      using handle_type     = std::coroutine_handle<promise_type>;
+      using value_type      = std::remove_cvref_t<Type>;
       using reference       = value_type&;
       using const_reference = const value_type&;
-      using iterator        = iterator;
-      using const_iterator  = iterator;
       using difference_type = std::ptrdiff_t;
       using size_type       = std::size_t;
 
-      struct promise_type
+    public:
+      struct InputIterator
       {
-          promise_type& get_return_object() noexcept
-          {
-            return *this;
-          }
-
-          std::suspend_always initial_suspend() const noexcept
-          {
-            return {};
-          }
-
-          std::suspend_always final_suspend() const noexcept
-          {
-            return {};
-          }
-
-          std::suspend_always yield_value(const T& other) noexcept
-          {
-            value = std::addressof(other);
-            return {};
-          }
-
-          void return_void()
-          {
-          }
-
-          template <typename Expression>
-          Expression&& await_transform(Expression&& expression)
-          {
-            static_assert(sizeof(expression) == 0, "co_await is not supported in coroutines of type generator");
-            return std::forward<Expression>(expression);
-          }
-
-          void unhandled_exception()
-          {
-            value = std::current_exception();
-          }
-
-          void rethrow_if_failed()
-          {
-            if ( value.index() == 1 )
-            {
-              std::rethrow_exception(std::get<1>(value));
-            }
-          }
-
-          std::variant<const T*, std::exception_ptr> value;
-      };
-
-      Generator()                            = default;
-      Generator(const Generator&)            = delete;
-      Generator& operator=(const Generator&) = delete;
-
-      Generator(promise_type& promise)
-        : handle(handle_type::from_promise(promise))
-      {
-      }
-
-      Generator(Generator&& other)
-        : handle(other.handle)
-      {
-        other.handle = nullptr;
-      }
-
-      Generator& operator=(Generator&& other)
-      {
-        if ( this != &other )
-        {
-          handle       = other.handle;
-          other.handle = nullptr;
-        }
-
-        return *this;
-      }
-
-      ~Generator()
-      {
-        if ( handle )
-        {
-          handle.destroy();
-        }
-      }
-
-      using handle_type = std::coroutine_handle<promise_type>;
-
-      handle_type handle{ nullptr };
-
-      struct iterator
-      {
-          using value_type        = std::remove_reference_t<T>;
+          using value_type        = std::remove_cvref_t<Type>;
           using pointer           = value_type*;
           using const_pointer     = const value_type*;
           using reference         = value_type&;
@@ -126,72 +63,37 @@ namespace Cxx::Coroutines
           using iterator_category = std::input_iterator_tag;
           using iterator_concept  = std::input_iterator_tag;
 
-          bool operator==(const iterator& other) const
-          {
-            return handle == other.handle;
-          }
+          handle_type m_handle{ nullptr };
 
-          bool operator!=(const iterator& other) const
-          {
-            return !(*this == other);
-          }
-
-          void operator++(int)
-          {
-            (void)operator++();
-          }
-
-          iterator& operator++()
-          {
-            handle.resume();
-
-            if ( handle.done() )
-            {
-              promise_type& promise = handle.promise();
-              handle                = nullptr;
-              promise.rethrow_if_failed();
-            }
-
-            return *this;
-          }
-
-          const T& operator*() const
-          {
-            return *std::get<0>(handle.promise().value);
-          }
-
-          const T* operator->() const
-          {
-            return std::addressof(operator*());
-          }
-
-          handle_type handle;
+          InputIterator() = default;
+          explicit InputIterator(handle_type handle) noexcept;
+          void                          operator++(int);
+          InputIterator&                operator++();
+          [[nodiscard]] const_reference operator*() const noexcept;
+          [[nodiscard]] const_pointer   operator->() const noexcept;
+          [[nodiscard]] bool            operator==(const InputIterator& right) const noexcept;
+          [[nodiscard]] bool            operator!=(const InputIterator& right) const noexcept;
       };
 
-      iterator begin()
-      {
-        if ( !handle )
-        {
-          return { nullptr };
-        }
+      using iterator       = InputIterator;
+      using const_iterator = InputIterator;
 
-        handle.resume();
+      [[nodiscard]] iterator begin();
+      [[nodiscard]] iterator end() noexcept;
 
-        if ( handle.done() )
-        {
-          handle.promise().rethrow_if_failed();
-          return { nullptr };
-        }
+      Generator() = default;
+      explicit Generator(promise_type& promise) noexcept;
+      Generator(Generator&& right) noexcept;
+      Generator& operator=(Generator&& right) noexcept;
+      ~Generator();
 
-        return { handle };
-      }
-
-      iterator end()
-      {
-        return { nullptr };
-      }
+    private:
+      handle_type m_handle{ nullptr };
   };
-
 } // namespace Cxx::Coroutines
+
+#include "Details/GeneratorImpl.tcc"
+#include "Details/GeneratorPromise.tcc"
+#include "Details/GeneratorIterator.tcc"
 
 #endif /* AA77ADD6_B5B4_40A9_9DCB_EBBAC4AC5AB2 */
