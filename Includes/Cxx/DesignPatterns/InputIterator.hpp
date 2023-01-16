@@ -38,7 +38,6 @@ namespace Cxx
   template <typename Type>
   class InputIteratorBuilder
   {
-
     private:
   };
 } // namespace Cxx

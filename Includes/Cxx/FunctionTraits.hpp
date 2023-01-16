@@ -2,6 +2,7 @@
 // https://en.cppreference.com/w/cpp/language/sizeof...
 // https://en.cppreference.com/w/cpp/language/fold
 // https://en.cppreference.com/w/cpp/language/function
+// https://en.cppreference.com/w/cpp/types/is_function
 
 #ifndef C2E87DC9_C92B_4119_AE64_4685318B7705
 #define C2E87DC9_C92B_4119_AE64_4685318B7705

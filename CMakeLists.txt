@@ -28,6 +28,7 @@ add_library(Cxx::Library::Core ALIAS ${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME}
     PUBLIC
+        Includes/Cxx/Algorithms.hpp
         Includes/Cxx/CompilerFeature.hpp
         Includes/Cxx/ContainerTraits.hpp
         Includes/Cxx/DetectionIdiom.hpp

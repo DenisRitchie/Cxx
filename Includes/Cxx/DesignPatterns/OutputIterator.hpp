@@ -8,6 +8,7 @@
 #include "Cxx/SemiRegularBox.hpp"
 
 #include <iterator>
+#include <iosfwd>
 
 namespace Cxx::DesignPatterns
 {
@@ -44,36 +45,98 @@ namespace Cxx::DesignPatterns
       // clang-format on
 
       OutputIteratorAdapter(ContainerType&& callback) noexcept
-        : Callback(std::move(callback))
+        : m_Callback(std::move(callback))
       {
       }
 
       OutputIteratorAdapter& operator=(const ValueType& value)
       {
-        Callback(value);
+        m_Callback(value);
         return *this;
       }
 
       OutputIteratorAdapter& operator=(ValueType&& value)
       {
-        Callback(std::move(value));
+        m_Callback(std::move(value));
         return *this;
       }
 
     private:
-      semiregular_box_t<ContainerType> Callback;
+      semiregular_box_t<ContainerType> m_Callback;
   };
 
   template <typename CallableContainer>
-  OutputIteratorAdapter<CallableContainer> MakeOutputIterator(CallableContainer&& function) noexcept
+  inline OutputIteratorAdapter<CallableContainer> MakeOutputIterator(CallableContainer&& function) noexcept
   {
     return OutputIteratorAdapter<CallableContainer>{ std::forward<CallableContainer>(function) };
   }
 
   template <typename CallableContainer, typename... ArgumentType>
-  OutputIteratorAdapter<CallableContainer> MakeOutputIterator(ArgumentType&&... arguments) noexcept
+  inline OutputIteratorAdapter<CallableContainer> MakeOutputIterator(ArgumentType&&... arguments) noexcept
   {
     return OutputIteratorAdapter<CallableContainer>{ CallableContainer(std::forward<ArgumentType>(arguments)...) };
+  }
+
+  template <typename DelimiterType, typename CharType, typename TraitType = std::char_traits<CharType>>
+  class OstreamJoiner
+  {
+    public:
+      using ostream_type      = std::basic_ostream<CharType, TraitType>;
+      using container_type    = ostream_type;
+      using iterator_category = std::output_iterator_tag;
+      using iterator_concept  = std::output_iterator_tag;
+      using traits_type       = TraitType;
+      using char_type         = CharType;
+      using value_type        = char_type;
+      using pointer           = value_type*;
+      using const_pointer     = const value_type*;
+      using reference         = value_type&;
+      using const_reference   = const value_type&;
+      using difference_type   = std::ptrdiff_t;
+
+      // clang-format off
+
+      OstreamJoiner& operator*() noexcept { return *this; }
+      OstreamJoiner& operator++() noexcept { return *this; }
+      OstreamJoiner& operator++(int32_t) noexcept { return *this; }
+
+      // clang-format on
+
+      OstreamJoiner(ostream_type& output, const DelimiterType& delimiter) noexcept(std::is_nothrow_copy_constructible_v<DelimiterType>)
+        : m_Output(std::addressof(output))
+        , m_Delimiter(delimiter)
+      {
+      }
+
+      OstreamJoiner(ostream_type& output, DelimiterType&& delimiter) noexcept(std::is_nothrow_move_constructible_v<DelimiterType>)
+        : m_Output(std::addressof(output))
+        , m_Delimiter(std::move(delimiter))
+      {
+      }
+
+      template <typename ValueType>
+      OstreamJoiner& operator=(const ValueType& value)
+      {
+        if ( not m_First )
+        {
+          *m_Output << m_Delimiter;
+        }
+
+        m_First = false;
+        *m_Output << value;
+        return *this;
+      }
+
+    private:
+      ostream_type* m_Output;
+      DelimiterType m_Delimiter;
+      bool          m_First{ true };
+  };
+
+  template <typename CharType, typename TraitType, typename DelimiterType>
+  inline OstreamJoiner<std::decay_t<DelimiterType>, CharType, TraitType> MakeOstreamJoiner(std::basic_ostream<CharType, TraitType>& output, DelimiterType&& delimiter)
+  {
+    return { output, std::forward<DelimiterType>(delimiter) };
   }
 } // namespace Cxx::DesignPatterns
 

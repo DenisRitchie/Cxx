@@ -10,7 +10,9 @@
 #include <utility>
 #include <locale>
 #include <ranges>
+#include <sstream>
 
+#include "Cxx/Algorithms.hpp"
 #include "Cxx/DesignPatterns/InputIterator.hpp"
 #include "Cxx/DesignPatterns/OutputIterator.hpp"
 
@@ -19,7 +21,7 @@ using ::testing::ContainerEq;
 using Cxx::DesignPatterns::MakeOutputIterator;
 using Cxx::DesignPatterns::OutputIteratorAdapter;
 
-TEST(OutputIteratorAdapterTests, OutputIteratorAdapterWithObjectFunction)
+TEST(OutputIteratorTests, OutputIteratorAdapterWithObjectFunction)
 {
   std::string_view  text = "Este es un texto de prueba";
   std::vector<char> result;
@@ -47,7 +49,7 @@ TEST(OutputIteratorAdapterTests, OutputIteratorAdapterWithObjectFunction)
   EXPECT_TRUE(std::equal(text.crbegin(), text.crend(), result.crbegin()));
 }
 
-TEST(OutputIteratorAdapterTests, OutputIteratorAdapterWithLambda)
+TEST(OutputIteratorTests, OutputIteratorAdapterWithLambda)
 {
   std::string_view  text = "TextoDePrueba";
   std::vector<char> result;
@@ -61,7 +63,7 @@ TEST(OutputIteratorAdapterTests, OutputIteratorAdapterWithLambda)
   EXPECT_TRUE(std::ranges::all_of(result, ::islower));
 }
 
-TEST(OutputIteratorAdapterTests, OutputIteratorAdapterWithStdFunction)
+TEST(OutputIteratorTests, OutputIteratorAdapterWithStdFunction)
 {
   std::string_view text = "Este es un texto de prueba";
   std::list<char>  result;
@@ -94,4 +96,13 @@ TEST(OutputIteratorAdapterTests, OutputIteratorAdapterWithStdFunction)
   );
 
   EXPECT_TRUE(std::equal(text.crbegin(), text.crend(), result.cbegin()));
+}
+
+TEST(OutputIteratorTests, MakeOstreamJoiner)
+{
+  std::string_view              text         = "Denis West";
+  std::vector<std::string_view> values       = { "Denis", "West" };
+  std::string                   result_value = Cxx::Join(values, " ");
+
+  EXPECT_EQ(text, result_value);
 }
