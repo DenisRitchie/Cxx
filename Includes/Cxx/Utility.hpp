@@ -34,6 +34,17 @@ namespace Cxx::Utilities
       return pointer_or_value;
     }
   }
+
+  // Helper type for the visitor
+  template <class... Ts>
+  struct Overloaded : Ts...
+  {
+      using Ts::operator()...;
+  };
+
+  // Explicit deduction guide (not needed as of C++20)
+  template <class... Ts>
+  Overloaded(Ts...) -> Overloaded<Ts...>;
 } // namespace Cxx::Utilities
 
 #endif /* CC4CC4EA_6005_4642_BC5F_855D9EC6C211 */

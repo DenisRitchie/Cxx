@@ -42,6 +42,7 @@ target_sources(${PROJECT_NAME}
         Includes/Cxx/SemiRegularBox.hpp
         Includes/Cxx/TypeTraits.hpp
         Includes/Cxx/Utility.hpp
+        Includes/Cxx/Details/AlgorithmImpl.hpp
         Includes/Cxx/Coroutines/Future.hpp
         Includes/Cxx/Coroutines/Generator.hpp
         Includes/Cxx/Exceptions/IOException.hpp
@@ -57,7 +58,7 @@ target_sources(${PROJECT_NAME}
 
 target_compile_features(${PROJECT_NAME} PUBLIC c_std_17 cxx_std_23)
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/Includes)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_LIST_DIR}/Includes)
 
 include(GNUInstallDirs)
 

@@ -42,7 +42,7 @@ target_link_libraries(${TEST_PROJECT_NAME}
         Cxx::Library::Core
 )
 
-target_include_directories(${TEST_PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/Includes)
+target_include_directories(${TEST_PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_compile_features(${TEST_PROJECT_NAME} PUBLIC c_std_17 cxx_std_23)
 

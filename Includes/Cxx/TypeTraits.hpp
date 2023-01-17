@@ -256,6 +256,13 @@ namespace Cxx::Traits
       template <typename... Types>
       using Rebind = typename Cxx::Traits::TypeParameters::ReplaceArguments<Template, Cxx::Traits::TypeParameters::ArgPack<Types...>>::Type;
   };
+
+  template <class Type>
+  struct Choice
+  {
+      Type Strategy = Type{};
+      bool NoThrow  = false;
+  };
 } // namespace Cxx::Traits
 
 #endif /* EDE2117E_A7D9_4EB3_892C_7B76526D6A96 */
