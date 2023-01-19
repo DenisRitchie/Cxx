@@ -42,7 +42,6 @@ target_sources(${PROJECT_NAME}
         Includes/Cxx/SemiRegularBox.hpp
         Includes/Cxx/TypeTraits.hpp
         Includes/Cxx/Utility.hpp
-        Includes/Cxx/Details/AlgorithmImpl.hpp
         Includes/Cxx/Coroutines/Future.hpp
         Includes/Cxx/Coroutines/Generator.hpp
         Includes/Cxx/Exceptions/IOException.hpp
@@ -53,6 +52,8 @@ target_sources(${PROJECT_NAME}
         Includes/Cxx/DesignPatterns/ServiceLocator.hpp
 
     PUBLIC
+        Sources/Cxx/Algorithms.cpp
+        Sources/Cxx/Utility.cpp
         Sources/Cxx/DesignPatterns/ServiceLocator.cpp
 )
 

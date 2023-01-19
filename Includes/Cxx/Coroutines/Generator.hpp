@@ -92,8 +92,8 @@ namespace Cxx::Coroutines
   };
 } // namespace Cxx::Coroutines
 
-#include "Details/GeneratorImpl.tcc"
-#include "Details/GeneratorPromise.tcc"
-#include "Details/GeneratorIterator.tcc"
+#include "Implementations/Generator.tcc"
+#include "Implementations/GeneratorPromise.tcc"
+#include "Implementations/GeneratorIterator.tcc"
 
 #endif /* AA77ADD6_B5B4_40A9_9DCB_EBBAC4AC5AB2 */
