@@ -2,6 +2,7 @@
 #define EDE2117E_A7D9_4EB3_892C_7B76526D6A96
 
 #include <concepts>
+#include <compare>
 
 namespace Cxx::Traits::TypeParameters
 {
@@ -257,11 +258,17 @@ namespace Cxx::Traits
       using Rebind = typename Cxx::Traits::TypeParameters::ReplaceArguments<Template, Cxx::Traits::TypeParameters::ArgPack<Types...>>::Type;
   };
 
-  template <class Type>
-  struct Choice
+  template <typename Type, typename Category = std::weak_ordering>
+  using fallback_compare_three_way_t = std::conditional_t<std::three_way_comparable<Type>, std::compare_three_way_result<Type>, std::type_identity<Category>>::type;
+
+  template <typename... Types>
+  using common_comparison_category_t = std::common_comparison_category_t<fallback_compare_three_way_t<Types, std::weak_ordering>...>;
+
+  template <typename Type>
+  struct choice
   {
-      Type Strategy = Type{};
-      bool NoThrow  = false;
+      Type strategy = Type{};
+      bool no_throw = false;
   };
 } // namespace Cxx::Traits
 

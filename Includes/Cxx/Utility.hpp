@@ -10,14 +10,31 @@
 #include <ranges>
 #include <string_view>
 #include <span>
+#include <variant>
 
 namespace Cxx
 {
   namespace Utilities
   {
+    /**
+     * @brief Desreferenciar un puntero de forma recursiva.
+     *
+     * @tparam T Tipo del puntero a desreferenciar.
+     * @param pointer_or_value Puntero a desreferenciar.
+     *
+     * @return constexpr decltype(auto) Regresa el valor más profundo desreferenciado.
+     */
     template <typename T>
     [[nodiscard]] inline constexpr decltype(auto) deep_raw_pointer_dereference(T&& pointer_or_value) noexcept;
 
+    /**
+     * @brief Desreferenciar un puntero inteligente de forma recursiva.
+     *
+     * @tparam T Tipo del puntero inteligente a desreferenciar.
+     * @param pointer_or_value Puntero inteligente a desreferenciar.
+     *
+     * @return constexpr decltype(auto) Regresa el valor más profundo desreferenciado.
+     */
     template <typename T>
     [[nodiscard]] inline constexpr decltype(auto) deep_smart_pointer_dereference(T&& pointer_or_value) noexcept;
   } // namespace Utilities
@@ -40,6 +57,38 @@ namespace Cxx
    */
   template <class... Ts>
   Overloaded(Ts...) -> Overloaded<Ts...>;
+
+  struct CompareThreeWayOrderFallback
+  {
+      template <typename LeftType, typename RightType>
+      inline constexpr auto operator()(LeftType&& left, RightType&& right) const -> Traits::common_comparison_category_t<LeftType, RightType>
+      {
+        using comparison_category_t = Traits::common_comparison_category_t<LeftType, RightType>;
+
+        if constexpr ( std::same_as<comparison_category_t, std::strong_ordering> )
+        {
+          return std::compare_strong_order_fallback(std::forward<LeftType>(left), std::forward<RightType>(right));
+        }
+        else if constexpr ( std::same_as<comparison_category_t, std::partial_ordering> )
+        {
+          return std::compare_partial_order_fallback(std::forward<LeftType>(left), std::forward<RightType>(right));
+        }
+        else if constexpr ( std::same_as<comparison_category_t, std::weak_ordering> )
+        {
+          return std::compare_weak_order_fallback(std::forward<LeftType>(left), std::forward<RightType>(right));
+        }
+        else
+        {
+          static_assert(Traits::AlwaysFalse<LeftType>, "3-way comparison not available.");
+        }
+      }
+  };
+
+  template <typename LeftType, typename RightType>
+  inline constexpr auto Compare3WayOrderFallback(LeftType&& left, RightType&& right)
+  {
+    return CompareThreeWayOrderFallback{}(std::forward<LeftType>(left), std::forward<RightType>(right));
+  }
 
   /**
    * @brief Clase usada como std::end(object) para las cadenas terminadas en Cero.

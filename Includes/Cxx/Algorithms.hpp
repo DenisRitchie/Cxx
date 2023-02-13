@@ -52,67 +52,33 @@ namespace Cxx::inline V1
   {
     namespace Ranges
     {
-      template <typename T>
-      struct GiveMeTheBestLocalDataType
+      namespace Details
       {
-          using Type = T;
-      };
+      } // namespace Details
 
-      template <>
-      struct GiveMeTheBestLocalDataType<char>
-      {
-          using Type = unsigned char;
-      };
-
-      template <>
-      struct GiveMeTheBestLocalDataType<signed char>
-      {
-          using Type = unsigned char;
-      };
-
-      //* TODO: Crear una clase de opciones donde se pueda establecer los distintos métodos de proyección y comparación
       struct ContiguousCompare
       {
-          template <std::contiguous_iterator LeftFirst, std::sentinel_for<LeftFirst> LeftLast, std::contiguous_iterator RightFirst, std::sentinel_for<RightFirst> RightLast, typename Predicate = std::ranges::equal_to, typename LeftProjection = std::identity, typename RightProjection = std::identity>
-          constexpr auto operator()(LeftFirst&& left_first, LeftLast&& left_last, RightFirst&& right_first, RightLast&& right_last, size_t length, Predicate&& predicate = {}, LeftProjection&& left_projection = {}, RightProjection&& right_projection = {}) const
+          template <std::contiguous_iterator LeftFirst, std::sentinel_for<LeftFirst> LeftLast, std::contiguous_iterator RightFirst, std::sentinel_for<RightFirst> RightLast, typename LeftProjection = std::identity, typename RightProjection = std::identity>
+          constexpr auto operator()(LeftFirst&& left_first, LeftLast&& left_last, RightFirst&& right_first, RightLast&& right_last, size_t length, LeftProjection&& left_projection = {}, RightProjection&& right_projection = {}) const
+            -> Traits::common_comparison_category_t<std::invoke_result_t<LeftProjection, std::iter_value_t<LeftFirst>>, std::invoke_result_t<RightProjection, std::iter_value_t<RightFirst>>>
           {
-            using left_value_type_t  = typename GiveMeTheBestLocalDataType<std::iter_value_t<LeftFirst>>::Type;
-            using right_value_type_t = typename GiveMeTheBestLocalDataType<std::iter_value_t<RightFirst>>::Type;
-
-            left_value_type_t  value1;
-            right_value_type_t value2;
-
-            if ( not length )
-              return std::weak_ordering::equivalent;
-
-            do
+            while ( length-- )
             {
-              //* TODO: Optimizar para evitar la copia para rangos que no sean numéricos
-
-              value1 = *left_first++;
-              value2 = *right_first++;
-
               if ( (left_first == left_last) or (right_first == right_last) )
                 break;
 
-              if ( std::invoke(predicate, value1, value2) )
-                continue;
+              auto&& projected_value1 = std::invoke(left_projection, *left_first++);
+              auto&& projected_value2 = std::invoke(right_projection, *right_first++);
 
-              //* TODO: Los métodos de proyección, no necesariamente regresarán el mismo tipo
-
-              value1 = (left_value_type_t)std::invoke(left_projection, value1);
-              value2 = (right_value_type_t)std::invoke(right_projection, value2);
-
-              if ( value1 != value2 )
-                break;
+              if ( auto compare_result = Compare3WayOrderFallback(projected_value1, projected_value2); compare_result != 0 )
+                return compare_result;
             }
-            while ( --length );
 
-            return std::compare_weak_order_fallback(value1, value2);
+            return Traits::common_comparison_category_t<std::invoke_result_t<LeftProjection, std::iter_value_t<LeftFirst>>, std::invoke_result_t<RightProjection, std::iter_value_t<RightFirst>>>::equivalent;
           }
 
-          template <std::ranges::contiguous_range LeftRange, std::ranges::contiguous_range RightRange, typename Predicate = std::ranges::equal_to, typename LeftProjection = std::identity, typename RightProjection = std::identity>
-          constexpr auto operator()(LeftRange&& left_range, RightRange&& right_range, const size_t length, Predicate&& predicate = {}, LeftProjection&& left_projection = {}, RightProjection&& right_projection = {}) const
+          template <std::ranges::contiguous_range LeftRange, std::ranges::contiguous_range RightRange, typename LeftProjection = std::identity, typename RightProjection = std::identity>
+          constexpr auto operator()(LeftRange&& left_range, RightRange&& right_range, const size_t length, LeftProjection&& left_projection = {}, RightProjection&& right_projection = {}) const
           {
             return (*this)( //
               std::ranges::begin(std::forward<LeftRange>(left_range)),
@@ -120,14 +86,13 @@ namespace Cxx::inline V1
               std::ranges::begin(std::forward<RightRange>(right_range)),
               std::ranges::end(std::forward<RightRange>(right_range)),
               length,
-              std::forward<Predicate>(predicate),
               std::forward<LeftProjection>(left_projection),
               std::forward<RightProjection>(right_projection)
             );
           }
 
-          template <std::ranges::contiguous_range LeftRange, std::ranges::contiguous_range RightRange, typename Predicate = std::ranges::equal_to, typename LeftProjection = std::identity, typename RightProjection = std::identity>
-          constexpr auto operator()(LeftRange&& left_range, RightRange&& right_range, Predicate&& predicate = {}, LeftProjection&& left_projection = {}, RightProjection&& right_projection = {}) const
+          template <std::ranges::contiguous_range LeftRange, std::ranges::contiguous_range RightRange, typename LeftProjection = std::identity, typename RightProjection = std::identity>
+          constexpr auto operator()(LeftRange&& left_range, RightRange&& right_range, LeftProjection&& left_projection = {}, RightProjection&& right_projection = {}) const
           {
             return (*this)( //
               std::forward<LeftRange>(left_range),
@@ -136,7 +101,6 @@ namespace Cxx::inline V1
                 std::ranges::size(std::forward<LeftRange>(left_range)),
                 std::ranges::size(std::forward<RightRange>(right_range))
               ),
-              std::forward<Predicate>(predicate),
               std::forward<LeftProjection>(left_projection),
               std::forward<RightProjection>(right_projection)
             );

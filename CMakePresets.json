@@ -134,6 +134,19 @@
           "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
         }
       }
+    },
+    {
+      "name": "MinGW",
+      "displayName": "GCC 12.2.0 x86_64-w64-mingw32",
+      "description": "Using compilers: C = D:\\Apps\\x64\\mingw64\\bin\\gcc.exe, CXX = D:\\Apps\\x64\\mingw64\\bin\\g++.exe",
+      "generator": "MinGW Makefiles",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+        "CMAKE_C_COMPILER": "D:\\Apps\\x64\\mingw64\\bin\\gcc.exe",
+        "CMAKE_CXX_COMPILER": "D:\\Apps\\x64\\mingw64\\bin\\g++.exe",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
     }
   ],
   "buildPresets": [

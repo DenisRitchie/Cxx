@@ -2,10 +2,25 @@
     "workbench.colorCustomizations": {
         "editor.lineHighlightBackground": "#1073cf2d",
         "editor.lineHighlightBorder": "#9fced11f",
-        "activityBar.background": "#043149",
-        "titleBar.activeBackground": "#054466",
-        "titleBar.activeForeground": "#F5FBFE"
+        "activityBar.activeBackground": "#1a1a1a",
+        "activityBar.background": "#1a1a1a",
+        "activityBar.foreground": "#e7e7e7",
+        "activityBar.inactiveForeground": "#e7e7e799",
+        "activityBarBadge.background": "#606020",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "commandCenter.border": "#e7e7e799",
+        "sash.hoverBorder": "#1a1a1a",
+        "statusBar.background": "#000000",
+        "statusBar.foreground": "#e7e7e7",
+        "statusBarItem.hoverBackground": "#1a1a1a",
+        "statusBarItem.remoteBackground": "#000000",
+        "statusBarItem.remoteForeground": "#e7e7e7",
+        "titleBar.activeBackground": "#000000",
+        "titleBar.activeForeground": "#e7e7e7",
+        "titleBar.inactiveBackground": "#00000099",
+        "titleBar.inactiveForeground": "#e7e7e799"
     },
+    "peacock.color": "#000000",
     "editor.insertSpaces": true,
     "editor.formatOnSave": true,
     "editor.formatOnPaste": false,
@@ -14,7 +29,10 @@
     "editor.tabCompletion": "on",
     "explorer.compactFolders": false,
     "git.ignoredRepositories": [
-        "googletest"
+        "googletest-distribution",
+        "googletest",
+        "gmock",
+        "gtest",
     ],
     "workbench.tree.indent": 20,
     "workbench.tree.expandMode": "doubleClick",
@@ -33,7 +51,6 @@
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "C_Cpp.default.cStandard": "c17",
     "C_Cpp.default.cppStandard": "c++23",
-    // "C_Cpp.default.intelliSenseMode": "windows-msvc-x64",
     "C_Cpp.errorSquiggles": "disabled",
     "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseCacheSize": 1048576,
@@ -42,7 +59,6 @@
     "files.encoding": "utf8",
     "files.insertFinalNewline": true,
     "files.maxMemoryForLargeFilesMB": 1048576,
-    "sonarlint.pathToCompileCommands": "${workspaceFolder}\\build\\compile_commands.json",
     "editor.tokenColorCustomizations": {
         "textMateRules": [
             {
@@ -192,6 +208,8 @@
         "resumable": "cpp"
     },
     "C_Cpp.files.exclude": {
+        "**/out": true,
+        "**/build": true,
         "**/.vscode": true,
         "**/.vs": true
     }

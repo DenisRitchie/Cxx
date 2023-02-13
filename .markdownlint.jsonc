@@ -1,0 +1,4 @@
+{
+  "line_length": false,
+  "MD025": false // Disabled: MD025/single-title/single-h1 - Multiple top-level headings in the same document
+}

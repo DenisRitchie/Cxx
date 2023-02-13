@@ -49,10 +49,10 @@ TEST(AlgorithmsTests, CompareRanges)
   EXPECT_TRUE(std::is_gt(Cxx::RangeCompare("Hola", "HOLA")));
   EXPECT_TRUE(std::is_gteq(Cxx::RangeCompare("Hola", "HOLA")));
 
-  EXPECT_TRUE(std::is_eq(Cxx::RangeCompare("Hola", "HOLA", std::ranges::equal_to{}, ::toupper, ::toupper)));
-  EXPECT_FALSE(std::is_neq(Cxx::RangeCompare("Hola", "HOLA", std::ranges::equal_to{}, ::toupper, ::toupper)));
-  EXPECT_FALSE(std::is_lt(Cxx::RangeCompare("Hola", "HOLA", std::ranges::equal_to{}, ::toupper, ::toupper)));
-  EXPECT_TRUE(std::is_lteq(Cxx::RangeCompare("Hola", "HOLA", std::ranges::equal_to{}, ::toupper, ::toupper)));
-  EXPECT_FALSE(std::is_gt(Cxx::RangeCompare("Hola", "HOLA", std::ranges::equal_to{}, ::toupper, ::toupper)));
-  EXPECT_TRUE(std::is_gteq(Cxx::RangeCompare("Hola", "HOLA", std::ranges::equal_to{}, ::toupper, ::toupper)));
+  EXPECT_TRUE(std::is_eq(Cxx::RangeCompare("Hola", "HOLA", ::toupper, ::toupper)));
+  EXPECT_FALSE(std::is_neq(Cxx::RangeCompare("Hola", "HOLA", ::toupper, ::toupper)));
+  EXPECT_FALSE(std::is_lt(Cxx::RangeCompare("Hola", "HOLA", ::toupper, ::toupper)));
+  EXPECT_TRUE(std::is_lteq(Cxx::RangeCompare("Hola", "HOLA", ::toupper, ::toupper)));
+  EXPECT_FALSE(std::is_gt(Cxx::RangeCompare("Hola", "HOLA", ::toupper, ::toupper)));
+  EXPECT_TRUE(std::is_gteq(Cxx::RangeCompare("Hola", "HOLA", ::toupper, ::toupper)));
 }
