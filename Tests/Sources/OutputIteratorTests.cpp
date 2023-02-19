@@ -102,7 +102,7 @@ TEST(OutputIteratorTests, MakeOstreamJoiner)
 {
   std::string_view              text         = "Denis West";
   std::vector<std::string_view> values       = { "Denis", "West" };
-  std::string                   result_value = Cxx::Join(values, " ");
+  std::string                   result_value = Cxx::Algorithms::Join(values, " ");
 
   EXPECT_EQ(text, result_value);
 }

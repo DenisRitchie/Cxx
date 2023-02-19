@@ -48,3 +48,7 @@ target_compile_features(${TEST_PROJECT_NAME} PUBLIC c_std_17 cxx_std_23)
 
 include(GoogleTest)
 gtest_discover_tests(${TEST_PROJECT_NAME} TEST_PREFIX Cxx::Libraries)
+
+if(MSVC)
+    add_test(NAME ${TEST_PROJECT_NAME} COMMAND ${TEST_PROJECT_NAME})
+endif()

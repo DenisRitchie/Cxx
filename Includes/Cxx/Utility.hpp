@@ -8,8 +8,10 @@
 #include <tuple>
 #include <array>
 #include <ranges>
+#include <string>
 #include <string_view>
 #include <span>
+#include <sstream>
 #include <variant>
 
 namespace Cxx
@@ -40,7 +42,7 @@ namespace Cxx
   } // namespace Utilities
 
   /**
-   * @brief Helper type for the visitor
+   * @brief Helper type for the visitor.
    *
    * @tparam Ts
    */
@@ -51,44 +53,121 @@ namespace Cxx
   };
 
   /**
-   * @brief Explicit deduction guide (not needed as of C++20)
+   * @brief Explicit deduction guide (not needed as of C++20).
    *
    * @tparam Ts
    */
   template <class... Ts>
   Overloaded(Ts...) -> Overloaded<Ts...>;
 
-  struct CompareThreeWayOrderFallback
-  {
-      template <typename LeftType, typename RightType>
-      inline constexpr auto operator()(LeftType&& left, RightType&& right) const -> Traits::common_comparison_category_t<LeftType, RightType>
-      {
-        using comparison_category_t = Traits::common_comparison_category_t<LeftType, RightType>;
+  /**
+   * @brief FakeCopyInit<T>(E): Helper function to evaluate expressions at Compile-Time.
+   *
+   *  (1) has type T [decay_t<decltype((E))> if T is deduced],
+   *  (2) is well-formed if and only if E is implicitly convertible to T and T is destructible, and
+   *  (3) is non-throwing if and only if both conversion from decltype((E)) to T and destruction of T are non-throwing.
+   *
+   * @tparam Type Data Type that is deduced in Compile-Time.
+   * @return Type The return is only used to test whether the object is implicitly convertible and destructible.
+   */
+  template <typename Type>
+  [[nodiscard]] Type FakeCopyInit(Type) noexcept;
 
-        if constexpr ( std::same_as<comparison_category_t, std::strong_ordering> )
-        {
-          return std::compare_strong_order_fallback(std::forward<LeftType>(left), std::forward<RightType>(right));
-        }
-        else if constexpr ( std::same_as<comparison_category_t, std::partial_ordering> )
-        {
-          return std::compare_partial_order_fallback(std::forward<LeftType>(left), std::forward<RightType>(right));
-        }
-        else if constexpr ( std::same_as<comparison_category_t, std::weak_ordering> )
-        {
-          return std::compare_weak_order_fallback(std::forward<LeftType>(left), std::forward<RightType>(right));
-        }
-        else
-        {
-          static_assert(Traits::AlwaysFalse<LeftType>, "3-way comparison not available.");
-        }
+  /**
+   * @brief
+   *
+   * @tparam Iterator
+   * @tparam Projection
+   */
+  template <std::indirectly_readable Iterator, std::indirectly_regular_unary_invocable<Iterator> Projection>
+  using projected_t = typename std::projected<Iterator, Projection>::value_type;
+
+  /**
+   * @brief Disable common object operations
+   *
+   *  Some overload sets in the library have the property that their constituent function templates are not visible
+   *  to argument-dependent name lookup (ADL) and that they inhibit ADL when found via unqualified name lookup.
+   *  This property allows these overload sets to be implemented as function objects. We derive such function
+   *  objects from this type to remove some typical object-ish behaviors which helps users avoid depending on their
+   *  non-specified object-ness.
+   */
+  class NotQuiteObject
+  {
+    public:
+      struct ConstructTag
+      {
+          explicit ConstructTag() = default;
+      };
+
+      NotQuiteObject() = delete;
+
+      constexpr explicit NotQuiteObject(ConstructTag) noexcept
+      {
       }
+
+      NotQuiteObject(const NotQuiteObject&)            = delete;
+      NotQuiteObject& operator=(const NotQuiteObject&) = delete;
+
+      void operator&() const = delete;
+
+    protected:
+      ~NotQuiteObject() = default;
   };
 
-  template <typename LeftType, typename RightType>
-  inline constexpr auto Compare3WayOrderFallback(LeftType&& left, RightType&& right)
+  /**
+   * @brief
+   *
+   */
+  namespace Details::CustomizationPointObjects
   {
-    return CompareThreeWayOrderFallback{}(std::forward<LeftType>(left), std::forward<RightType>(right));
-  }
+    /**
+     * @brief
+     *
+     */
+    struct CompareThreeWayOrderFallback
+    {
+        /**
+         * @brief
+         *
+         * @tparam LeftType
+         * @tparam RightType
+         * @param left
+         * @param right
+         * @return Traits::common_comparison_category_t<LeftType, RightType>
+         */
+        template <typename LeftType, typename RightType>
+        inline constexpr auto operator()(LeftType&& left, RightType&& right) const noexcept -> Traits::common_comparison_category_t<LeftType, RightType>
+        {
+          using comparison_category_t = Traits::common_comparison_category_t<LeftType, RightType>;
+
+          if constexpr ( std::same_as<comparison_category_t, std::strong_ordering> )
+          {
+            return std::compare_strong_order_fallback(std::forward<LeftType>(left), std::forward<RightType>(right));
+          }
+          else if constexpr ( std::same_as<comparison_category_t, std::partial_ordering> )
+          {
+            return std::compare_partial_order_fallback(std::forward<LeftType>(left), std::forward<RightType>(right));
+          }
+          else if constexpr ( std::same_as<comparison_category_t, std::weak_ordering> )
+          {
+            return std::compare_weak_order_fallback(std::forward<LeftType>(left), std::forward<RightType>(right));
+          }
+          else
+          {
+            static_assert(Traits::AlwaysFalse<LeftType>, "3-way comparison not available.");
+          }
+        }
+    };
+  } // namespace Details::CustomizationPointObjects
+
+  inline namespace CustomizationPointObjects
+  {
+    /**
+     * @brief
+     *
+     */
+    inline constexpr Cxx::Details::CustomizationPointObjects::CompareThreeWayOrderFallback CompareThreeWayOrderFallback;
+  } // namespace CustomizationPointObjects
 
   /**
    * @brief Clase usada como std::end(object) para las cadenas terminadas en Cero.
@@ -101,16 +180,16 @@ namespace Cxx
   struct ZStringSentinel
   {
       // clang-format off
-      constexpr bool operator==(const      char* pointer) const noexcept;
-      constexpr bool operator==(const    int8_t* pointer) const noexcept;
-      constexpr bool operator==(const   uint8_t* pointer) const noexcept;
-      constexpr bool operator==(const  uint16_t* pointer) const noexcept;
-      constexpr bool operator==(const  uint32_t* pointer) const noexcept;
-      constexpr bool operator==(const   wchar_t* pointer) const noexcept;
-      constexpr bool operator==(const   char8_t* pointer) const noexcept;
-      constexpr bool operator==(const  char16_t* pointer) const noexcept;
-      constexpr bool operator==(const  char32_t* pointer) const noexcept;
-      constexpr bool operator==(const std::byte* pointer) const noexcept;
+      bool operator==(const      char* pointer) const noexcept;
+      bool operator==(const    int8_t* pointer) const noexcept;
+      bool operator==(const   uint8_t* pointer) const noexcept;
+      bool operator==(const  uint16_t* pointer) const noexcept;
+      bool operator==(const  uint32_t* pointer) const noexcept;
+      bool operator==(const   wchar_t* pointer) const noexcept;
+      bool operator==(const   char8_t* pointer) const noexcept;
+      bool operator==(const  char16_t* pointer) const noexcept;
+      bool operator==(const  char32_t* pointer) const noexcept;
+      bool operator==(const std::byte* pointer) const noexcept;
       // clang-format on
   };
 
@@ -118,7 +197,7 @@ namespace Cxx
    * @brief Clase usada como std::ranges::view para las cadenas terminadas en Cero.
    *
    * @tparam CharType Tipo del caracter de la cadena terminada en Cero.
-   * @todo   Implementar todos los métodos std::contiguous_iterator que espera el tipo base std::ranges::view_interface
+   * @todo   Implementar todos los métodos std::contiguous_iterator que espera el tipo base std::ranges::view_interface.
    */
   template <typename CharType>
   requires Cxx::Traits::IsAnyOf<CharType, char, int8_t, uint8_t, uint16_t, uint32_t, wchar_t, char8_t, char16_t, char32_t, std::byte>
@@ -141,13 +220,19 @@ namespace Cxx
       }
 
       template <size_t Size>
-      constexpr ZString(const value_type (&ref_array)[Size]) noexcept
-        : m_Pointer{ ref_array }
+      constexpr ZString(const value_type (&array)[Size]) noexcept
+        : m_Pointer{ array }
+      {
+      }
+
+      template <typename TraitType, typename AllocType>
+      constexpr ZString(const std::basic_string<CharType, TraitType, AllocType>& string) noexcept
+        : m_Pointer{ string.data() }
       {
       }
 
       template <typename TraitType>
-      constexpr ZString(const std::basic_string_view<CharType, TraitType>& string_view) noexcept
+      constexpr ZString(const std::basic_string_view<CharType, TraitType> string_view) noexcept
         : m_Pointer{ string_view.data() }
       {
       }
@@ -177,6 +262,37 @@ namespace Cxx
     private:
       const_pointer m_Pointer{ nullptr };
   };
+
+  inline namespace Literals
+  {
+    inline namespace StringLiterals
+    {
+      [[nodiscard]] inline constexpr ZString<char> operator"" _zs(const char* string, [[maybe_unused]] const size_t length) noexcept
+      {
+        return ZString<char>{ string };
+      }
+
+      [[nodiscard]] inline constexpr ZString<wchar_t> operator"" _zs(const wchar_t* string, [[maybe_unused]] const size_t length) noexcept
+      {
+        return ZString<wchar_t>{ string };
+      }
+
+      [[nodiscard]] inline constexpr ZString<char8_t> operator"" _zs(const char8_t* string, [[maybe_unused]] const size_t length) noexcept
+      {
+        return ZString<char8_t>{ string };
+      }
+
+      [[nodiscard]] inline constexpr ZString<char16_t> operator"" _zs(const char16_t* string, [[maybe_unused]] const size_t length) noexcept
+      {
+        return ZString<char16_t>{ string };
+      }
+
+      [[nodiscard]] inline constexpr ZString<char32_t> operator"" _zs(const char32_t* string, [[maybe_unused]] const size_t length) noexcept
+      {
+        return ZString<char32_t>{ string };
+      }
+    } // namespace StringLiterals
+  }   // namespace Literals
 
   namespace Details
   {

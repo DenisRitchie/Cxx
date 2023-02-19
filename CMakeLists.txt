@@ -30,6 +30,7 @@ target_sources(${PROJECT_NAME}
     PUBLIC
         Includes/Cxx/Algorithms.hpp
         Includes/Cxx/CompilerFeature.hpp
+        Includes/Cxx/Concepts.hpp
         Includes/Cxx/ContainerTraits.hpp
         Includes/Cxx/DetectionIdiom.hpp
         Includes/Cxx/ExtensionMethods.hpp
@@ -106,6 +107,11 @@ install(
         Includes/Cxx/DesignPatterns/ServiceLocator.hpp
     DESTINATION Include/Cxx/DesignPatterns
 )
+
+if(MSVC)
+    enable_testing()
+    include(CTest)
+endif()
 
 add_subdirectory(Tests)
 

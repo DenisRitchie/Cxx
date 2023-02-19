@@ -114,3 +114,8 @@
 * [Guía de arquitectura de microservicios de .NET](https://dotnet.microsoft.com/es-es/learn/aspnet/microservices-architecture)
 * [DevOps para aplicaciones .NET](https://dotnet.microsoft.com/es-es/learn/aspnet/devops)
 * [Libros electrónicos de .NET y Azure](https://dotnet.microsoft.com/es-es/learn/azure/architecture)
+
+# Locale Names, Languages, And Country/Region Strings
+
+* [UCRT Locale names, Languages, and Country/Region strings](https://learn.microsoft.com/en-us/cpp/c-runtime-library/locale-names-languages-and-country-region-strings?view=msvc-170)
+* [setlocale, _wsetlocale](https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/setlocale-wsetlocale?view=msvc-170)

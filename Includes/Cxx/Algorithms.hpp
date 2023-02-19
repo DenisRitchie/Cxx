@@ -23,13 +23,14 @@
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
+#include <locale>
 
 #include <cstring>
 #include <cctype>
 #include <cuchar>
 #include <ctime>
 
-namespace Cxx::inline V1
+namespace Cxx::Algorithms::inline V1
 {
   /**
    * @brief Convierte un contenedor en una cadena donde cada elemento está separado por un delimitador.
@@ -48,73 +49,124 @@ namespace Cxx::inline V1
   template <typename CharType = char, typename TraitType = std::char_traits<CharType>, typename AllocType = std::allocator<CharType>>
   std::basic_string<CharType, TraitType, AllocType> Join(auto&& container, auto&& separator);
 
-  namespace Algorithms
+  namespace Details::FunctionObjects
   {
-    namespace Ranges
+    using CompareThreeWayOrderFallback = Cxx::Details::CustomizationPointObjects::CompareThreeWayOrderFallback;
+
+    class RangeCompare : public NotQuiteObject
     {
-      namespace Details
-      {
-      } // namespace Details
+      public:
+        using NotQuiteObject::NotQuiteObject;
 
-      struct ContiguousCompare
-      {
-          template <std::contiguous_iterator LeftFirst, std::sentinel_for<LeftFirst> LeftLast, std::contiguous_iterator RightFirst, std::sentinel_for<RightFirst> RightLast, typename LeftProjection = std::identity, typename RightProjection = std::identity>
-          constexpr auto operator()(LeftFirst&& left_first, LeftLast&& left_last, RightFirst&& right_first, RightLast&& right_last, size_t length, LeftProjection&& left_projection = {}, RightProjection&& right_projection = {}) const
-            -> Traits::common_comparison_category_t<std::invoke_result_t<LeftProjection, std::iter_value_t<LeftFirst>>, std::invoke_result_t<RightProjection, std::iter_value_t<RightFirst>>>
+        template <
+          std::input_iterator           LeftFirst,
+          std::sentinel_for<LeftFirst>  LeftLast,
+          std::input_iterator           RightFirst,
+          std::sentinel_for<RightFirst> RightLast,
+          typename CompareThreeWay = CompareThreeWayOrderFallback,
+          typename LeftProjection  = std::identity,
+          typename RightProjection = std::identity>
+        constexpr auto operator()( //
+          LeftFirst&&       left_first,
+          LeftLast&&        left_last,
+          RightFirst&&      right_first,
+          RightLast&&       right_last,
+          size_t            number_of_items_to_compare,
+          CompareThreeWay&& compare_three_way_order_fallback = {},
+          LeftProjection&&  left_projection                  = {},
+          RightProjection&& right_projection                 = {}
+        ) const
+          noexcept(noexcept(std::invoke(
+            std::forward<CompareThreeWay>(compare_three_way_order_fallback), //
+            /**/ std::invoke(std::forward<LeftProjection>(left_projection), *left_first),
+            /**/ std::invoke(std::forward<RightProjection>(right_projection), *right_first)
+          ))) //
+          -> std::invoke_result_t<CompareThreeWay, projected_t<LeftFirst, LeftProjection>, projected_t<RightFirst, RightProjection>>
+        {
+          using compare_three_way_t = std::invoke_result_t<CompareThreeWay, projected_t<LeftFirst, LeftProjection>, projected_t<RightFirst, RightProjection>>;
+
+          // clang-format off
+          for ( ; number_of_items_to_compare; --number_of_items_to_compare, left_first = std::ranges::next(left_first), right_first = std::ranges::next(right_first) )
           {
-            while ( length-- )
-            {
-              if ( (left_first == left_last) or (right_first == right_last) )
-                break;
-
-              auto&& projected_value1 = std::invoke(left_projection, *left_first++);
-              auto&& projected_value2 = std::invoke(right_projection, *right_first++);
-
-              if ( auto compare_result = Compare3WayOrderFallback(projected_value1, projected_value2); compare_result != 0 )
-                return compare_result;
+            if ( left_first == left_last ) {
+              return right_first == right_last ? compare_three_way_t::equivalent : compare_three_way_t::less;
             }
 
-            return Traits::common_comparison_category_t<std::invoke_result_t<LeftProjection, std::iter_value_t<LeftFirst>>, std::invoke_result_t<RightProjection, std::iter_value_t<RightFirst>>>::equivalent;
-          }
+            if ( right_first == right_last ) {
+              return compare_three_way_t::greater;
+            }
 
-          template <std::ranges::contiguous_range LeftRange, std::ranges::contiguous_range RightRange, typename LeftProjection = std::identity, typename RightProjection = std::identity>
-          constexpr auto operator()(LeftRange&& left_range, RightRange&& right_range, const size_t length, LeftProjection&& left_projection = {}, RightProjection&& right_projection = {}) const
-          {
-            return (*this)( //
-              std::ranges::begin(std::forward<LeftRange>(left_range)),
-              std::ranges::end(std::forward<LeftRange>(left_range)),
-              std::ranges::begin(std::forward<RightRange>(right_range)),
-              std::ranges::end(std::forward<RightRange>(right_range)),
-              length,
-              std::forward<LeftProjection>(left_projection),
-              std::forward<RightProjection>(right_projection)
+            const auto compare_result = std::invoke(
+              std::forward<CompareThreeWay>(compare_three_way_order_fallback),
+                std::invoke(std::forward<LeftProjection>(left_projection), *left_first),
+                std::invoke(std::forward<RightProjection>(right_projection), *right_first)
             );
+
+            if ( std::is_neq(compare_result) ) {
+              return compare_result;
+            }
           }
+          // clang-format on
 
-          template <std::ranges::contiguous_range LeftRange, std::ranges::contiguous_range RightRange, typename LeftProjection = std::identity, typename RightProjection = std::identity>
-          constexpr auto operator()(LeftRange&& left_range, RightRange&& right_range, LeftProjection&& left_projection = {}, RightProjection&& right_projection = {}) const
-          {
-            return (*this)( //
-              std::forward<LeftRange>(left_range),
-              std::forward<RightRange>(right_range),
-              std::min( //
-                std::ranges::size(std::forward<LeftRange>(left_range)),
-                std::ranges::size(std::forward<RightRange>(right_range))
-              ),
-              std::forward<LeftProjection>(left_projection),
-              std::forward<RightProjection>(right_projection)
-            );
-          }
-      };
-    } // namespace Ranges
-  }   // namespace Algorithms
+          return compare_three_way_t::equivalent;
+        }
 
-  inline constexpr Algorithms::Ranges::ContiguousCompare RangeCompare;
+        template < //
+          std::ranges::input_range LeftRange,
+          std::ranges::input_range RightRange,
+          typename CompareThreeWay = CompareThreeWayOrderFallback,
+          typename LeftProjection  = std::identity,
+          typename RightProjection = std::identity>
+        constexpr auto operator()( //
+          LeftRange&&       left_range,
+          RightRange&&      right_range,
+          const size_t      number_of_items_to_compare,
+          CompareThreeWay&& compare_three_way_order_fallback = {},
+          LeftProjection&&  left_projection                  = {},
+          RightProjection&& right_projection                 = {}
+        ) const noexcept
+        {
+          return (*this)( //
+            std::ranges::begin(std::forward<LeftRange>(left_range)),
+            std::ranges::end(std::forward<LeftRange>(left_range)),
+            std::ranges::begin(std::forward<RightRange>(right_range)),
+            std::ranges::end(std::forward<RightRange>(right_range)),
+            number_of_items_to_compare,
+            std::forward<CompareThreeWay>(compare_three_way_order_fallback),
+            std::forward<LeftProjection>(left_projection),
+            std::forward<RightProjection>(right_projection)
+          );
+        }
 
-  inline namespace CustomizationPointObjects
-  {
-  } // namespace CustomizationPointObjects
-} // namespace Cxx::inline V1
+        template < //
+          std::ranges::input_range LeftRange,
+          std::ranges::input_range RightRange,
+          typename CompareThreeWay = CompareThreeWayOrderFallback,
+          typename LeftProjection  = std::identity,
+          typename RightProjection = std::identity>
+        constexpr auto operator()( //
+          LeftRange&&       left_range,
+          RightRange&&      right_range,
+          CompareThreeWay&& compare_three_way_order_fallback = {},
+          LeftProjection&&  left_projection                  = {},
+          RightProjection&& right_projection                 = {}
+        ) const noexcept
+        {
+          return (*this)( //
+            std::forward<LeftRange>(left_range),
+            std::forward<RightRange>(right_range),
+            std::min(std::ranges::size(std::forward<LeftRange>(left_range)), std::ranges::size(std::forward<RightRange>(right_range))),
+            std::forward<CompareThreeWay>(compare_three_way_order_fallback),
+            std::forward<LeftProjection>(left_projection),
+            std::forward<RightProjection>(right_projection)
+          );
+        }
+    };
+  } // namespace Details::FunctionObjects
+
+  inline constexpr Details::FunctionObjects::RangeCompare RangeCompare{ NotQuiteObject::ConstructTag{} };
+
+} // namespace Cxx::Algorithms::inline V1
 
 template <std::ranges::contiguous_range Range, std::ranges::forward_range Pattern>
 requires std::ranges::view<Range> and std::ranges::view<Pattern> and std::indirectly_comparable<std::ranges::iterator_t<Range>, std::ranges::iterator_t<Pattern>, std::ranges::equal_to>

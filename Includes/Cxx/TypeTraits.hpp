@@ -263,13 +263,6 @@ namespace Cxx::Traits
 
   template <typename... Types>
   using common_comparison_category_t = std::common_comparison_category_t<fallback_compare_three_way_t<Types, std::weak_ordering>...>;
-
-  template <typename Type>
-  struct choice
-  {
-      Type strategy = Type{};
-      bool no_throw = false;
-  };
 } // namespace Cxx::Traits
 
 #endif /* EDE2117E_A7D9_4EB3_892C_7B76526D6A96 */
