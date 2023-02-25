@@ -1,3 +1,12 @@
+/**
+ * @file Algorithms.hpp
+ * @author Denis West <DenisWest@outlook.com>
+ * @brief Algoritmos de uso común y correcciones de la librería de Rangos de C++ en la manipulación de cadenas.
+ * @version 1.0
+ * @date 2023-02-25
+ * @copyright Copyright (c) 2023
+ */
+
 #ifndef B5A9594F_915C_489B_ACFA_0EC539CC64F8
 #define B5A9594F_915C_489B_ACFA_0EC539CC64F8
 
@@ -52,14 +61,53 @@ namespace Cxx::Algorithms::inline V1
 
   namespace Details::FunctionObjects
   {
+    /**
+     * @brief Objeto función que compara 2 Rangos de categoría mínima: std::input_iterator.
+     */
     class RangeCompare : public NotQuiteObject
     {
       private:
+        /**
+         * @brief Este valor es usado como UINT64_MAX para aquellas sobrecargas que no provean un número determinado de elementos a comparar.
+         */
         inline static constexpr size_t DefaultSize = static_cast<size_t>(-1);
 
       public:
         using NotQuiteObject::NotQuiteObject;
 
+        /**
+         * @brief Compara 2 rangos de categoría mínima: std::input_iterator.
+         *
+         *  Cada rango debe proveer un "Begin" y "End" según el estandar de C++.
+         *  El tipo del "End" no tiene que coincidir con el tipo del "Begin", "End" puede ser un Sentinela.
+         *
+         *  Para cada rango se debe proveer un método de proyección para transformar los datos antes de ser comparados.
+         *  Y por último se debe proporcionar un método que compare cada valor del rango usando cualquier mecanismo de comparación de 3 vías de C++.
+         *
+         *  Este método de comparación debe regresar unos de los siguientes tipos: std::strong_ordering, std::weak_ordering, std::partial_ordering.
+         *
+         *  Este método regresa un valor que representa si el Rango 1 es (>, >=, <, <=, ==, !=) que el Rango 2.
+         *
+         * @tparam LeftFirst std::input_iterator del primer elemento del Rango 1.
+         * @tparam LeftLast  std::sentinel_for<LeftFirst> del elemento siguiente al último del Rango 1.
+         * @tparam RightFirst std::input_iterator del primer elemento del Rango 2.
+         * @tparam RightLast  std::sentinel_for<RightFirst> del elemento siguiente al último del Rango 2.
+         * @tparam LeftProjection  std::invocable<std::iter_value_t<LeftFirst>> Método de transformación para cada valor del Rango 1 antes de ser comparado.
+         * @tparam RightProjection std::invocable<std::iter_value_t<RightFirst>> Método de transformación para cada valor del Rango 2 antes de ser comparado.
+         * @tparam CompareThreeWay std::invocable<projected_t<LeftFirst, LeftProjection>, projected_t<RightFirst, RightProjection>> Método de comparación de 3 vías. Debe retornar uno de los siguientes tipos: std::strong_ordering, std::weak_ordering, std::partial_ordering.
+         *
+         * @param[in] left_first Iterador del primer elemento del Rango 1.
+         * @param[in] left_last  Iterador/Sentinela del elemento siguiente al último del Rango 1.
+         * @param[in] right_first Iterador del primer elemento del Rango 2.
+         * @param[in] right_last  Iterador/Sentinela del elemento siguiente al último del Rango 2.
+         * @param[in] number_of_items_to_compare Cantidad de elementos a comparar. Usar "-1" si se van a comparar todos los elementos.
+         * @param[in] left_projection  Método de transformación para cada valor del Rango 1 antes de ser comparado.
+         * @param[in] right_projection Método de transformación para cada valor del Rango 2 antes de ser comparado.
+         * @param[in] compare_three_way_order_fallback Método de comparación de 3 vías. Debe retornar uno de los siguientes tipos: std::strong_ordering, std::weak_ordering, std::partial_ordering.
+         *
+         * @see Cxx::CompareThreeWayOrderFallback
+         * @return Regresa una valor de tipo (std::strong_ordering, std::weak_ordering, std::partial_ordering) según el argumento compare_three_way_order_fallback. Este valor representa si el Rango 1 es (>, >=, <, <=, ==, !=) que el Rango 2.
+         */
         template < // clang-format off
           std::input_iterator          LeftFirst,
           std::sentinel_for<LeftFirst> LeftLast,
@@ -79,125 +127,246 @@ namespace Cxx::Algorithms::inline V1
           ))) -> std::invoke_result_t<CompareThreeWay, projected_t<LeftFirst, LeftProjection>, projected_t<RightFirst, RightProjection>>;
         // clang-format on
 
+        /**
+         * @brief Compara 2 rangos de categoría mínima: std::input_iterator.
+         *
+         * @tparam LeftRange  Rango de tipo std::ranges::input_range.
+         * @tparam RightRange Rango de tipo std::ranges::input_range.
+         *
+         * @param[in] left_range  Rango 1 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] right_range Rango 2 de categoría: std::ranges::input_range que se va ha comparar.
+         *
+         * @see Cxx::CompareThreeWayOrderFallback
+         * @return Regresa una valor de tipo (std::strong_ordering, std::weak_ordering, std::partial_ordering). Este valor representa si el Rango 1 es (>, >=, <, <=, ==, !=) que el Rango 2.
+         */
         template <std::ranges::input_range LeftRange, std::ranges::input_range RightRange>
         constexpr auto operator()(LeftRange&& left_range, RightRange&& right_range) const noexcept;
 
+        /**
+         * @brief Compara 2 rangos de categoría mínima: std::input_iterator.
+         *
+         * @tparam LeftRange  Rango de tipo std::ranges::input_range.
+         * @tparam RightRange Rango de tipo std::ranges::input_range.
+         *
+         * @param[in] left_range  Rango 1 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] right_range Rango 2 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] number_of_items_to_compare Cantidad de elementos a comparar. Usar "-1" si se van a comparar todos los elementos.
+         *
+         * @see Cxx::CompareThreeWayOrderFallback
+         * @return Regresa una valor de tipo (std::strong_ordering, std::weak_ordering, std::partial_ordering). Este valor representa si el Rango 1 es (>, >=, <, <=, ==, !=) que el Rango 2.
+         */
         template <std::ranges::input_range LeftRange, std::ranges::input_range RightRange>
         constexpr auto operator()(LeftRange&& left_range, RightRange&& right_range, const size_t number_of_items_to_compare) const noexcept;
 
+        /**
+         * @brief Compara 2 rangos de categoría mínima: std::input_iterator.
+         *
+         * @tparam LeftRange  Rango de tipo std::ranges::input_range.
+         * @tparam RightRange Rango de tipo std::ranges::input_range.
+         * @tparam CompareThreeWay Método de comparación de 3 vías. Debe retornar uno de los siguientes tipos: std::strong_ordering, std::weak_ordering, std::partial_ordering.
+         *
+         * @param[in] left_range  Rango 1 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] right_range Rango 2 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] compare_three_way_order_fallback Método de comparación de 3 vías. Debe retornar uno de los siguientes tipos: std::strong_ordering, std::weak_ordering, std::partial_ordering.
+         *
+         * @see Cxx::CompareThreeWayOrderFallback
+         * @return Regresa una valor de tipo (std::strong_ordering, std::weak_ordering, std::partial_ordering). Este valor representa si el Rango 1 es (>, >=, <, <=, ==, !=) que el Rango 2.
+         */
         template <std::ranges::input_range LeftRange, std::ranges::input_range RightRange, std::invocable<std::ranges::range_value_t<LeftRange>, std::ranges::range_value_t<RightRange>> CompareThreeWay>
         constexpr auto operator()(LeftRange&& left_range, RightRange&& right_range, CompareThreeWay&& compare_three_way_order_fallback) const noexcept;
 
+        /**
+         * @brief Compara 2 rangos de categoría mínima: std::input_iterator.
+         *
+         * @tparam LeftRange  Rango de tipo std::ranges::input_range.
+         * @tparam RightRange Rango de tipo std::ranges::input_range.
+         * @tparam LeftProjection  Método de transformación para cada valor del Rango 1 antes de ser comparado.
+         * @tparam RightProjection Método de transformación para cada valor del Rango 2 antes de ser comparado.
+         *
+         * @param[in] left_range  Rango 1 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] right_range Rango 2 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] left_projection  Método de transformación para cada valor del Rango 1 antes de ser comparado.
+         * @param[in] right_projection Método de transformación para cada valor del Rango 2 antes de ser comparado.
+         *
+         * @see Cxx::CompareThreeWayOrderFallback
+         * @return Regresa una valor de tipo (std::strong_ordering, std::weak_ordering, std::partial_ordering). Este valor representa si el Rango 1 es (>, >=, <, <=, ==, !=) que el Rango 2.
+         */
         template <std::ranges::input_range LeftRange, std::ranges::input_range RightRange, std::invocable<std::ranges::range_value_t<LeftRange>> LeftProjection, std::invocable<std::ranges::range_value_t<RightRange>> RightProjection>
         constexpr auto operator()(LeftRange&& left_range, RightRange&& right_range, LeftProjection&& left_projection, RightProjection&& right_projection) const noexcept;
 
+        /**
+         * @brief Compara 2 rangos de categoría mínima: std::input_iterator.
+         *
+         * @tparam LeftRange  Rango de tipo std::ranges::input_range.
+         * @tparam RightRange Rango de tipo std::ranges::input_range.
+         * @tparam LeftProjection  Método de transformación para cada valor del Rango 1 antes de ser comparado.
+         * @tparam RightProjection Método de transformación para cada valor del Rango 2 antes de ser comparado.
+         * @tparam CompareThreeWay Método de comparación de 3 vías. Debe retornar uno de los siguientes tipos: std::strong_ordering, std::weak_ordering, std::partial_ordering.
+         *
+         * @param[in] left_range  Rango 1 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] right_range Rango 2 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] left_projection  Método de transformación para cada valor del Rango 1 antes de ser comparado.
+         * @param[in] right_projection Método de transformación para cada valor del Rango 2 antes de ser comparado.
+         * @param[in] compare_three_way_order_fallback Método de comparación de 3 vías. Debe retornar uno de los siguientes tipos: std::strong_ordering, std::weak_ordering, std::partial_ordering.
+         *
+         * @see Cxx::CompareThreeWayOrderFallback
+         * @return Regresa una valor de tipo (std::strong_ordering, std::weak_ordering, std::partial_ordering). Este valor representa si el Rango 1 es (>, >=, <, <=, ==, !=) que el Rango 2.
+         */
         template <std::ranges::input_range LeftRange, std::ranges::input_range RightRange, std::invocable<std::ranges::range_value_t<LeftRange>> LeftProjection, std::invocable<std::ranges::range_value_t<RightRange>> RightProjection, std::invocable<projected_t<std::ranges::iterator_t<LeftRange>, LeftProjection>, projected_t<std::ranges::iterator_t<RightRange>, RightProjection>> CompareThreeWay>
         constexpr auto operator()(LeftRange&& left_range, RightRange&& right_range, LeftProjection&& left_projection, RightProjection&& right_projection, CompareThreeWay&& compare_three_way_order_fallback) const noexcept;
 
+        /**
+         * @brief Compara 2 rangos de categoría mínima: std::input_iterator.
+         *
+         * @tparam LeftRange  Rango de tipo std::ranges::input_range.
+         * @tparam RightRange Rango de tipo std::ranges::input_range.
+         * @tparam CompareThreeWay Método de comparación de 3 vías. Debe retornar uno de los siguientes tipos: std::strong_ordering, std::weak_ordering, std::partial_ordering.
+         *
+         * @param[in] left_range  Rango 1 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] right_range Rango 2 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] number_of_items_to_compare Cantidad de elementos a comparar. Usar "-1" si se van a comparar todos los elementos.
+         * @param[in] compare_three_way_order_fallback Método de comparación de 3 vías. Debe retornar uno de los siguientes tipos: std::strong_ordering, std::weak_ordering, std::partial_ordering.
+         *
+         * @see Cxx::CompareThreeWayOrderFallback
+         * @return Regresa una valor de tipo (std::strong_ordering, std::weak_ordering, std::partial_ordering). Este valor representa si el Rango 1 es (>, >=, <, <=, ==, !=) que el Rango 2.
+         */
         template <std::ranges::input_range LeftRange, std::ranges::input_range RightRange, std::invocable<std::ranges::range_value_t<LeftRange>, std::ranges::range_value_t<RightRange>> CompareThreeWay>
         constexpr auto operator()(LeftRange&& left_range, RightRange&& right_range, const size_t number_of_items_to_compare, CompareThreeWay&& compare_three_way_order_fallback) const noexcept;
 
+        /**
+         * @brief Compara 2 rangos de categoría mínima: std::input_iterator.
+         *
+         * @tparam LeftRange  Rango de tipo std::ranges::input_range.
+         * @tparam RightRange Rango de tipo std::ranges::input_range.
+         * @tparam LeftProjection  Método de transformación para cada valor del Rango 1 antes de ser comparado.
+         * @tparam RightProjection Método de transformación para cada valor del Rango 2 antes de ser comparado.
+         *
+         * @param[in] left_range  Rango 1 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] right_range Rango 2 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] number_of_items_to_compare Cantidad de elementos a comparar. Usar "-1" si se van a comparar todos los elementos.
+         * @param[in] left_projection  Método de transformación para cada valor del Rango 1 antes de ser comparado.
+         * @param[in] right_projection Método de transformación para cada valor del Rango 2 antes de ser comparado.
+         *
+         * @see Cxx::CompareThreeWayOrderFallback
+         * @return Regresa una valor de tipo (std::strong_ordering, std::weak_ordering, std::partial_ordering). Este valor representa si el Rango 1 es (>, >=, <, <=, ==, !=) que el Rango 2.
+         */
         template <std::ranges::input_range LeftRange, std::ranges::input_range RightRange, std::invocable<std::ranges::range_value_t<LeftRange>> LeftProjection, std::invocable<std::ranges::range_value_t<RightRange>> RightProjection>
         constexpr auto operator()(LeftRange&& left_range, RightRange&& right_range, const size_t number_of_items_to_compare, LeftProjection&& left_projection, RightProjection&& right_projection) const noexcept;
 
+        /**
+         * @brief Compara 2 rangos de categoría mínima: std::input_iterator.
+         *
+         * @tparam LeftRange  Rango de tipo std::ranges::input_range.
+         * @tparam RightRange Rango de tipo std::ranges::input_range.
+         * @tparam LeftProjection  Método de transformación para cada valor del Rango 1 antes de ser comparado.
+         * @tparam RightProjection Método de transformación para cada valor del Rango 2 antes de ser comparado.
+         * @tparam CompareThreeWay Método de comparación de 3 vías. Debe retornar uno de los siguientes tipos: std::strong_ordering, std::weak_ordering, std::partial_ordering.
+         *
+         * @param[in] left_range  Rango 1 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] right_range Rango 2 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] number_of_items_to_compare Cantidad de elementos a comparar. Usar "-1" si se van a comparar todos los elementos.
+         * @param[in] left_projection  Método de transformación para cada valor del Rango 1 antes de ser comparado.
+         * @param[in] right_projection Método de transformación para cada valor del Rango 2 antes de ser comparado.
+         * @param[in] compare_three_way_order_fallback Método de comparación de 3 vías. Debe retornar uno de los siguientes tipos: std::strong_ordering, std::weak_ordering, std::partial_ordering.
+         *
+         * @see Cxx::CompareThreeWayOrderFallback
+         * @return Regresa una valor de tipo (std::strong_ordering, std::weak_ordering, std::partial_ordering). Este valor representa si el Rango 1 es (>, >=, <, <=, ==, !=) que el Rango 2.
+         */
         template <std::ranges::input_range LeftRange, std::ranges::input_range RightRange, std::invocable<std::ranges::range_value_t<LeftRange>> LeftProjection, std::invocable<std::ranges::range_value_t<RightRange>> RightProjection, std::invocable<projected_t<std::ranges::iterator_t<LeftRange>, LeftProjection>, projected_t<std::ranges::iterator_t<RightRange>, RightProjection>> CompareThreeWay>
         constexpr auto operator()(LeftRange&& left_range, RightRange&& right_range, const size_t number_of_items_to_compare, LeftProjection&& left_projection, RightProjection&& right_projection, CompareThreeWay&& compare_three_way_order_fallback) const noexcept;
 
+        /**
+         * @brief Compara 2 rangos de categoría mínima: std::input_iterator.
+         *
+         * @tparam LeftRange  Rango de tipo std::ranges::input_range.
+         * @tparam RightRange Rango de tipo std::ranges::input_range.
+         * @tparam Projection Método de transformación para cada valor del Rango antes de ser comparado.
+         *
+         * @param[in] left_range  Rango 1 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] right_range Rango 2 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] projection  Método de transformación para cada valor del Rango antes de ser comparado.
+         *
+         * @see Cxx::CompareThreeWayOrderFallback
+         * @return Regresa una valor de tipo (std::strong_ordering, std::weak_ordering, std::partial_ordering). Este valor representa si el Rango 1 es (>, >=, <, <=, ==, !=) que el Rango 2.
+         */
         template <std::ranges::input_range LeftRange, std::ranges::input_range RightRange, typename Projection>
         requires std::invocable<Projection, std::ranges::range_value_t<LeftRange>> and std::invocable<Projection, std::ranges::range_value_t<RightRange>>
         constexpr auto operator()(LeftRange&& left_range, RightRange&& right_range, Projection&& projection) const noexcept;
 
+        /**
+         * @brief Compara 2 rangos de categoría mínima: std::input_iterator.
+         *
+         * @tparam LeftRange  Rango de tipo std::ranges::input_range.
+         * @tparam RightRange Rango de tipo std::ranges::input_range.
+         * @tparam Projection Método de transformación para cada valor del Rango antes de ser comparado.
+         * @tparam CompareThreeWay Método de comparación de 3 vías. Debe retornar uno de los siguientes tipos: std::strong_ordering, std::weak_ordering, std::partial_ordering.
+         *
+         * @param[in] left_range  Rango 1 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] right_range Rango 2 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] projection  Método de transformación para cada valor del Rango antes de ser comparado.
+         * @param[in] compare_three_way_order_fallback Método de comparación de 3 vías. Debe retornar uno de los siguientes tipos: std::strong_ordering, std::weak_ordering, std::partial_ordering.
+         *
+         * @see Cxx::CompareThreeWayOrderFallback
+         * @return Regresa una valor de tipo (std::strong_ordering, std::weak_ordering, std::partial_ordering). Este valor representa si el Rango 1 es (>, >=, <, <=, ==, !=) que el Rango 2.
+         */
         template <std::ranges::input_range LeftRange, std::ranges::input_range RightRange, typename Projection, std::invocable<projected_t<std::ranges::iterator_t<LeftRange>, Projection>, projected_t<std::ranges::iterator_t<RightRange>, Projection>> CompareThreeWay>
         requires std::invocable<Projection, std::ranges::range_value_t<LeftRange>> and std::invocable<Projection, std::ranges::range_value_t<RightRange>>
         constexpr auto operator()(LeftRange&& left_range, RightRange&& right_range, Projection&& projection, CompareThreeWay&& compare_three_way_order_fallback) const noexcept;
 
+        /**
+         * @brief Compara 2 rangos de categoría mínima: std::input_iterator.
+         *
+         * @tparam LeftRange  Rango de tipo std::ranges::input_range.
+         * @tparam RightRange Rango de tipo std::ranges::input_range.
+         * @tparam Projection Método de transformación para cada valor del Rango antes de ser comparado.
+         *
+         * @param[in] left_range  Rango 1 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] right_range Rango 2 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] number_of_items_to_compare Cantidad de elementos a comparar. Usar "-1" si se van a comparar todos los elementos.
+         * @param[in] projection Método de transformación para cada valor del Rango antes de ser comparado.
+         *
+         * @see Cxx::CompareThreeWayOrderFallback
+         * @return Regresa una valor de tipo (std::strong_ordering, std::weak_ordering, std::partial_ordering). Este valor representa si el Rango 1 es (>, >=, <, <=, ==, !=) que el Rango 2.
+         */
         template <std::ranges::input_range LeftRange, std::ranges::input_range RightRange, typename Projection>
         requires std::invocable<Projection, std::ranges::range_value_t<LeftRange>> and std::invocable<Projection, std::ranges::range_value_t<RightRange>>
         constexpr auto operator()(LeftRange&& left_range, RightRange&& right_range, const size_t number_of_items_to_compare, Projection&& projection) const noexcept;
 
+        /**
+         * @brief Compara 2 rangos de categoría mínima: std::input_iterator.
+         *
+         * @tparam LeftRange  Rango de tipo std::ranges::input_range.
+         * @tparam RightRange Rango de tipo std::ranges::input_range.
+         * @tparam Projection Método de transformación para cada valor del Rango antes de ser comparado.
+         * @tparam CompareThreeWay Método de comparación de 3 vías. Debe retornar uno de los siguientes tipos: std::strong_ordering, std::weak_ordering, std::partial_ordering.
+         *
+         * @param[in] left_range  Rango 1 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] right_range Rango 2 de categoría: std::ranges::input_range que se va ha comparar.
+         * @param[in] number_of_items_to_compare Cantidad de elementos a comparar. Usar "-1" si se van a comparar todos los elementos.
+         * @param[in] projection Método de transformación para cada valor del Rango antes de ser comparado.
+         * @param[in] compare_three_way_order_fallback Método de comparación de 3 vías. Debe retornar uno de los siguientes tipos: std::strong_ordering, std::weak_ordering, std::partial_ordering.
+         *
+         * @see Cxx::CompareThreeWayOrderFallback
+         * @return Regresa una valor de tipo (std::strong_ordering, std::weak_ordering, std::partial_ordering). Este valor representa si el Rango 1 es (>, >=, <, <=, ==, !=) que el Rango 2.
+         */
         template <std::ranges::input_range LeftRange, std::ranges::input_range RightRange, typename Projection, std::invocable<projected_t<std::ranges::iterator_t<LeftRange>, Projection>, projected_t<std::ranges::iterator_t<RightRange>, Projection>> CompareThreeWay>
         requires std::invocable<Projection, std::ranges::range_value_t<LeftRange>> and std::invocable<Projection, std::ranges::range_value_t<RightRange>>
         constexpr auto operator()(LeftRange&& left_range, RightRange&& right_range, const size_t number_of_items_to_compare, Projection&& projection, CompareThreeWay&& compare_three_way_order_fallback) const noexcept;
     };
   } // namespace Details::FunctionObjects
 
+  /**
+   * @brief Objeto función que compara 2 Rangos de categoría mínima: std::input_iterator.
+   */
   inline constexpr Details::FunctionObjects::RangeCompare RangeCompare{ NotQuiteObject::ConstructTag{} };
-
-  namespace Details::FunctionObjects
-  {
-    class StrongOrder : public NotQuiteObject
-    {
-      public:
-        using NotQuiteObject::NotQuiteObject;
-
-        template <typename CharType, typename TraitType>
-        std::strong_ordering operator()( //
-          const std::basic_string_view<CharType, TraitType>                       left_string,
-          const std::type_identity_t<std::basic_string_view<CharType, TraitType>> right_string
-        ) const noexcept
-        {
-          return Cxx::Algorithms::RangeCompare(left_string, right_string, std::identity{}, std::strong_order);
-        }
-
-        template <typename CharType>
-        std::strong_ordering operator()( //
-          const ZString<CharType>                       left_string,
-          const std::type_identity_t<ZString<CharType>> right_string
-        ) const noexcept
-        {
-          return Cxx::Algorithms::RangeCompare(left_string, right_string, size_t(-1), std::identity{}, std::strong_order);
-        }
-
-        template <typename CharType>
-        std::strong_ordering operator()( //
-          const CharType*                       left_string,
-          const std::type_identity_t<CharType>* right_string
-        ) const noexcept
-        {
-          return Cxx::Algorithms::RangeCompare( //
-            left_string,
-            ZStringSentinel{},
-            right_string,
-            ZStringSentinel{},
-            static_cast<size_t>(-1),
-            std::identity{},
-            std::identity{},
-            std::strong_order
-          );
-        }
-
-        // template <typename CharType, typename TraitType>
-        // std::strong_ordering operator()( //
-        //   const CharType*                                   left_string,
-        //   const std::basic_string_view<CharType, TraitType> right_string
-        // ) const noexcept
-        // {
-        //   return Cxx::Algorithms::RangeCompare(left_string, ZStringSentinel{}, right_string.data(), ZStringSentinel{}, static_cast<size_t>(-1), std::strong_order);
-        // }
-
-        // template <typename CharType, typename TraitType>
-        // std::strong_ordering operator()( //
-        //   const std::basic_string_view<CharType, TraitType> left_string,
-        //   const CharType*                                   right_string
-        // ) const noexcept
-        // {
-        //   return Cxx::Algorithms::RangeCompare(left_string.data(), ZStringSentinel{}, right_string, ZStringSentinel{}, static_cast<size_t>(-1), std::strong_order);
-        // }
-    };
-
-    class WeakOrder : public NotQuiteObject
-    {
-      public:
-        using NotQuiteObject::NotQuiteObject;
-    };
-
-  } // namespace Details::FunctionObjects
-
-  inline constexpr Details::FunctionObjects::StrongOrder strong_order{ NotQuiteObject::ConstructTag{} };
-
-  inline constexpr Details::FunctionObjects::WeakOrder weak_order{ NotQuiteObject::ConstructTag{} };
 } // namespace Cxx::Algorithms::inline V1
 
+/**
+ * @brief
+ *
+ * @tparam Range
+ * @tparam Pattern
+ */
 template <std::ranges::contiguous_range Range, std::ranges::forward_range Pattern>
 requires std::ranges::view<Range> and std::ranges::view<Pattern> and std::indirectly_comparable<std::ranges::iterator_t<Range>, std::ranges::iterator_t<Pattern>, std::ranges::equal_to>
 class std::ranges::split_view<Range, Pattern> : public Cxx::Details::ContiguousSplitView<Range, Pattern>

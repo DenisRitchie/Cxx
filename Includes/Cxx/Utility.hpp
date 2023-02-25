@@ -99,12 +99,9 @@ namespace Cxx
           explicit ConstructTag() = default;
       };
 
-      NotQuiteObject() = delete;
+      constexpr explicit NotQuiteObject(ConstructTag) noexcept {};
 
-      constexpr explicit NotQuiteObject(ConstructTag) noexcept
-      {
-      }
-
+      NotQuiteObject()                                 = delete;
       NotQuiteObject(const NotQuiteObject&)            = delete;
       NotQuiteObject& operator=(const NotQuiteObject&) = delete;
 
@@ -114,67 +111,51 @@ namespace Cxx
       ~NotQuiteObject() = default;
   };
 
-  /**
-   * @brief
-   *
-   */
   namespace Details::CustomizationPointObjects
   {
     /**
-     * @brief
-     *
+     * @brief Realiza una comparación de 3 vías para 2 objetos.
      */
     struct CompareThreeWayOrderFallback
     {
         /**
-         * @brief
-         *
+         * @brief Habilita la busqueda de claves de diferentes tipos para los contenedores asociativos.
          */
         using is_transparent = int32_t;
 
         /**
-         * @brief
+         * @brief Realiza una comparación de 3 vías para 2 objetos.
          *
-         * @tparam LeftType
-         * @tparam RightType
-         * @param left
-         * @param right
-         * @return Traits::common_comparison_category_t<LeftType, RightType>
+         *  Se analiza el tipo para deducir si el retorno es: std::strong_ordering, std::weak_ordering ó std::partial_ordering.
+         *
+         * @tparam LeftType  Tipo del objeto 1 a comparar.
+         * @tparam RightType Tipo del objeto 2 a comparar.
+         * @param left  Objeto 1 a comparar. Como mínimo debe tener sobrecargado los operadores (<, ==).
+         * @param right Objeto 2 a comparar. Como mínimo debe tener sobrecargado los operadores (<, ==).
+         * @return Regresa un valor de tipo: std::strong_ordering, std::weak_ordering ó std::partial_ordering.
          */
         template <typename LeftType, typename RightType>
-        inline constexpr auto operator()(LeftType&& left, RightType&& right) const noexcept -> Traits::common_comparison_category_t<LeftType, RightType>
-        {
-          using comparison_category_t = Traits::common_comparison_category_t<LeftType, RightType>;
-
-          if constexpr ( std::same_as<comparison_category_t, std::strong_ordering> )
-          {
-            return std::compare_strong_order_fallback(std::forward<LeftType>(left), std::forward<RightType>(right));
-          }
-          else if constexpr ( std::same_as<comparison_category_t, std::partial_ordering> )
-          {
-            return std::compare_partial_order_fallback(std::forward<LeftType>(left), std::forward<RightType>(right));
-          }
-          else if constexpr ( std::same_as<comparison_category_t, std::weak_ordering> )
-          {
-            return std::compare_weak_order_fallback(std::forward<LeftType>(left), std::forward<RightType>(right));
-          }
-          else
-          {
-            static_assert(Traits::AlwaysFalse<LeftType>, "3-way comparison not available.");
-          }
-        }
+        inline constexpr auto operator()(LeftType&& left, RightType&& right) const noexcept -> Traits::common_comparison_category_t<LeftType, RightType>;
     };
   } // namespace Details::CustomizationPointObjects
 
   inline namespace CustomizationPointObjects
   {
+    /**
+     * @brief Realiza una comparación de 3 vías para 2 objetos.
+     */
     inline constexpr Cxx::Details::CustomizationPointObjects::CompareThreeWayOrderFallback CompareThreeWayOrderFallback;
   } // namespace CustomizationPointObjects
 
   inline namespace FunctionObjects
   {
+    /**
+     * @brief Objeto función que representa la identidad de un objeto.
+     *
+     *  std::identity realiza un reenvio perfecto, regresando el valor sin alterar.
+     */
     inline constexpr std::identity Identity;
-  }
+  } // namespace FunctionObjects
 
   /**
    * @brief Clase usada como std::end(object) para las cadenas terminadas en Cero.
@@ -184,30 +165,21 @@ namespace Cxx
    *
    *  Por ejemplo: std::begin("Texto") != ZStringSentinel{ }
    */
-  struct ZStringSentinel
+  struct zstring_sentinel
   {
-      // clang-format off
-      bool operator==(const      char* pointer) const noexcept;
-      bool operator==(const    int8_t* pointer) const noexcept;
-      bool operator==(const   uint8_t* pointer) const noexcept;
-      bool operator==(const  uint16_t* pointer) const noexcept;
-      bool operator==(const  uint32_t* pointer) const noexcept;
-      bool operator==(const   wchar_t* pointer) const noexcept;
-      bool operator==(const   char8_t* pointer) const noexcept;
-      bool operator==(const  char16_t* pointer) const noexcept;
-      bool operator==(const  char32_t* pointer) const noexcept;
-      bool operator==(const std::byte* pointer) const noexcept;
-      // clang-format on
+      template <Concepts::Character CharType>
+      inline constexpr bool operator==(const CharType* pointer) const noexcept;
+
+      template <Concepts::Character CharType>
+      inline constexpr bool operator!=(const CharType* pointer) const noexcept;
   };
 
   /**
    * @brief Clase usada como std::ranges::view para las cadenas terminadas en Cero.
    *
    * @tparam CharType Tipo del caracter de la cadena terminada en Cero.
-   * @todo   Implementar todos los métodos std::contiguous_iterator que espera el tipo base std::ranges::view_interface.
    */
-  template <typename CharType>
-  requires Cxx::Traits::IsAnyOf<CharType, char, int8_t, uint8_t, uint16_t, uint32_t, wchar_t, char8_t, char16_t, char32_t, std::byte>
+  template <Concepts::Character CharType>
   class ZString : std::ranges::view_interface<ZString<CharType>>
   {
     public:
@@ -221,83 +193,49 @@ namespace Cxx
       using difference_type = std::ptrdiff_t;
       using size_type       = std::size_t;
 
-      constexpr ZString(const_pointer pointer) noexcept
-        : m_Pointer{ pointer }
-      {
-      }
+      constexpr ZString(const_pointer pointer) noexcept;
+      constexpr ZString(const_pointer pointer, const size_type size) noexcept;
 
       template <size_t Size>
-      constexpr ZString(const value_type (&array)[Size]) noexcept
-        : m_Pointer{ array }
-      {
-      }
+      constexpr ZString(const std::type_identity_t<value_type> (&array)[Size]) noexcept;
 
       template <typename TraitType, typename AllocType>
-      constexpr ZString(const std::basic_string<CharType, TraitType, AllocType>& string) noexcept
-        : m_Pointer{ string.data() }
-      {
-      }
+      constexpr ZString(const std::basic_string<CharType, TraitType, AllocType>& string) noexcept;
 
       template <typename TraitType>
-      constexpr ZString(const std::basic_string_view<CharType, TraitType> string_view) noexcept
-        : m_Pointer{ string_view.data() }
-      {
-      }
+      constexpr ZString(const std::basic_string_view<CharType, TraitType> string_view) noexcept;
 
       template <size_t Size>
-      constexpr ZString(const std::array<CharType, Size>& array) noexcept
-        : m_Pointer{ array.data() }
-      {
-      }
+      constexpr ZString(const std::array<CharType, Size>& array) noexcept;
 
       template <size_t Size>
-      constexpr ZString(const std::span<CharType, Size>& span) noexcept
-        : m_Pointer{ span.data() }
-      {
-      }
+      constexpr ZString(const std::span<CharType, Size>& span) noexcept;
 
-      constexpr const_iterator begin() const noexcept
-      {
-        return m_Pointer;
-      }
+      constexpr size_type size() const noexcept;
 
-      constexpr ZStringSentinel end() const noexcept
-      {
-        return {};
-      }
+      constexpr const_iterator begin() const noexcept;
+      constexpr const_iterator cbegin() const noexcept;
+
+      constexpr const_iterator end() const noexcept;
+      constexpr const_iterator cend() const noexcept;
+
+      constexpr zstring_sentinel zend() const noexcept;
+      constexpr zstring_sentinel zcend() const noexcept;
 
     private:
-      const_pointer m_Pointer{ nullptr };
+      size_type     m_Size;
+      const_pointer m_Pointer;
   };
 
   inline namespace Literals
   {
     inline namespace StringLiterals
     {
-      [[nodiscard]] inline constexpr ZString<char> operator"" _zs(const char* string, [[maybe_unused]] const size_t length) noexcept
-      {
-        return ZString<char>{ string };
-      }
-
-      [[nodiscard]] inline constexpr ZString<wchar_t> operator"" _zs(const wchar_t* string, [[maybe_unused]] const size_t length) noexcept
-      {
-        return ZString<wchar_t>{ string };
-      }
-
-      [[nodiscard]] inline constexpr ZString<char8_t> operator"" _zs(const char8_t* string, [[maybe_unused]] const size_t length) noexcept
-      {
-        return ZString<char8_t>{ string };
-      }
-
-      [[nodiscard]] inline constexpr ZString<char16_t> operator"" _zs(const char16_t* string, [[maybe_unused]] const size_t length) noexcept
-      {
-        return ZString<char16_t>{ string };
-      }
-
-      [[nodiscard]] inline constexpr ZString<char32_t> operator"" _zs(const char32_t* string, [[maybe_unused]] const size_t length) noexcept
-      {
-        return ZString<char32_t>{ string };
-      }
+      [[nodiscard]] inline constexpr ZString<char>     operator"" _zs(const char* string, const size_t length) noexcept;
+      [[nodiscard]] inline constexpr ZString<wchar_t>  operator"" _zs(const wchar_t* string, const size_t length) noexcept;
+      [[nodiscard]] inline constexpr ZString<char8_t>  operator"" _zs(const char8_t* string, const size_t length) noexcept;
+      [[nodiscard]] inline constexpr ZString<char16_t> operator"" _zs(const char16_t* string, const size_t length) noexcept;
+      [[nodiscard]] inline constexpr ZString<char32_t> operator"" _zs(const char32_t* string, const size_t length) noexcept;
     } // namespace StringLiterals
   }   // namespace Literals
 

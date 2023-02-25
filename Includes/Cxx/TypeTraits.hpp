@@ -265,4 +265,10 @@ namespace Cxx::Traits
   using common_comparison_category_t = std::common_comparison_category_t<fallback_compare_three_way_t<Types, std::weak_ordering>...>;
 } // namespace Cxx::Traits
 
+namespace Cxx::Concepts
+{
+  template <typename CharType>
+  concept Character = Cxx::Traits::IsAnyOf<CharType, char, int8_t, uint8_t, uint16_t, uint32_t, wchar_t, char8_t, char16_t, char32_t, std::byte>;
+}
+
 #endif /* EDE2117E_A7D9_4EB3_892C_7B76526D6A96 */
