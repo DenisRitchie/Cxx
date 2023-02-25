@@ -49,7 +49,7 @@ namespace Cxx::Concepts
 
   template <class Type1, class Type2>
   concept HalfOrdered = // clang-format off
-    requires(const remove_reference_t<Type1>& value1, const remove_reference_t<Type2>& value2)
+    requires(const std::remove_reference_t<Type1>& value1, const std::remove_reference_t<Type2>& value2)
     {
       { value1 <  value2 } -> BooleanTestable;
       { value1 >  value2 } -> BooleanTestable;
@@ -79,6 +79,21 @@ namespace Cxx::Concepts
    */
   template <class Type, class Category>
   concept ComparesAs = std::same_as<std::common_comparison_category_t<Type, Category>, Category>;
+
+  template <class Type>
+  using WithReference = Type&;
+
+  template <class Type>
+  concept CanReference = requires { typename WithReference<Type>; };
+
+  template <class Iterator>
+  concept Cpp17Iterator = // clang-format off
+    std::copyable<Iterator> and requires(Iterator it)
+    {
+      { *it   } -> CanReference;
+      { ++it  } -> std::same_as<Iterator&>;
+      { *it++ } -> CanReference;
+    }; // clang-format on
 
   template <typename Type>
   struct Choice

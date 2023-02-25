@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <array>
 #include <algorithm>
 #include <charconv>
 #include <chrono>
@@ -56,4 +57,31 @@ TEST(StandardLibrary, LexicographicalCompare)
 {
   // indirect_strict_weak_order<projected<_It1, _Pj1>, projected<_It2, _Pj2>>
   // std::indirect_strict_weak_order<>
+}
+
+TEST(StandardLibrary, ArrayView)
+{
+  [[maybe_unused]] const std::string                  string      = "Text";
+  [[maybe_unused]] const std::vector<char>            vector      = { std::from_range, "Text" };
+  [[maybe_unused]] constexpr std::string_view         string_view = "Text";
+  [[maybe_unused]] constexpr const char*              pointer     = "Text";
+  [[maybe_unused]] constexpr const char               array[5]    = "Text";
+  [[maybe_unused]] constexpr std::array<char, 5>      std_array   = { 'T', 'e', 'x', 't' };
+  [[maybe_unused]] constexpr std::span<const char, 5> span        = "Text";
+
+  EXPECT_TRUE(std::ranges::contiguous_range<std::string>);
+  EXPECT_TRUE(std::ranges::contiguous_range<std::string_view>);
+  EXPECT_TRUE(std::ranges::contiguous_range<std::ranges::subrange<const char*>>);
+  EXPECT_TRUE(std::ranges::contiguous_range<const char[5]>);
+  EXPECT_TRUE((std::ranges::contiguous_range<std::array<char, 5>>));
+  EXPECT_TRUE(std::ranges::contiguous_range<std::vector<char>>);
+  EXPECT_TRUE(std::ranges::contiguous_range<std::span<char>>);
+
+  [[maybe_unused]] std::span<const char> span_string{ string };
+  [[maybe_unused]] std::span<const char> span_string_view{ string_view };
+  [[maybe_unused]] std::span<const char> span_pointer{ pointer, 4 };
+  [[maybe_unused]] std::span<const char> span_array{ array };
+  [[maybe_unused]] std::span<const char> span_std_array{ std_array };
+  [[maybe_unused]] std::span<const char> span_vector{ vector };
+  [[maybe_unused]] std::span<const char> span_span{ span };
 }

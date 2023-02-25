@@ -129,6 +129,12 @@ namespace Cxx
         /**
          * @brief
          *
+         */
+        using is_transparent = int32_t;
+
+        /**
+         * @brief
+         *
          * @tparam LeftType
          * @tparam RightType
          * @param left
@@ -162,12 +168,13 @@ namespace Cxx
 
   inline namespace CustomizationPointObjects
   {
-    /**
-     * @brief
-     *
-     */
     inline constexpr Cxx::Details::CustomizationPointObjects::CompareThreeWayOrderFallback CompareThreeWayOrderFallback;
   } // namespace CustomizationPointObjects
+
+  inline namespace FunctionObjects
+  {
+    inline constexpr std::identity Identity;
+  }
 
   /**
    * @brief Clase usada como std::end(object) para las cadenas terminadas en Cero.
