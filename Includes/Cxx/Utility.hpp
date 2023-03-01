@@ -262,7 +262,7 @@ namespace Cxx
         requires std::constructible_from<Range, std::ranges::views::all_t<Container>>
         ContiguousSplitView(Container&& range, std::ranges::range_value_t<Container>&& pattern)
           : m_Range{ std::ranges::views::all(std::forward<Container>(range)) }
-          , m_Pattern{ std::move(pattern) }
+          , m_Pattern{ std::ranges::single_view(std::move(pattern)) }
         {
         }
 
@@ -278,7 +278,7 @@ namespace Cxx
                 using std::span<underlying_t>::span;
 
                 operator std::basic_string_view<std::ranges::range_value_t<Range>>() const noexcept
-                requires Cxx::Traits::IsAnyOf<std::ranges::range_value_t<Range>, char, int8_t, uint8_t, uint16_t, uint32_t, wchar_t, char8_t, char16_t, char32_t>
+                requires Concepts::Character<std::ranges::range_value_t<Range>>
                 {
                   return { this->data(), this->size() };
                 }
@@ -390,6 +390,19 @@ namespace Cxx
     };
   } // namespace Details
 } // namespace Cxx
+
+/**
+ * @brief
+ *
+ * @tparam Range
+ * @tparam Pattern
+ */
+template <std::ranges::contiguous_range Range, std::ranges::forward_range Pattern>
+requires std::ranges::view<Range> and std::ranges::view<Pattern> and std::indirectly_comparable<std::ranges::iterator_t<Range>, std::ranges::iterator_t<Pattern>, std::ranges::equal_to>
+class std::ranges::split_view<Range, Pattern> : public Cxx::Details::ContiguousSplitView<Range, Pattern>
+{
+    using Cxx::Details::ContiguousSplitView<Range, Pattern>::ContiguousSplitView;
+};
 
 #include "Implementations/Utility.tcc"
 

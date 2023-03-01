@@ -22,7 +22,7 @@ using ::testing::Lt;
 using ::testing::Ne;
 
 using Cxx::Algorithms::Join;
-// using Cxx::Algorithms::Split;
+using Cxx::Algorithms::Split;
 
 using std::array;
 using std::span;
@@ -39,13 +39,23 @@ namespace views = std::ranges::views;
 
 TEST(AlgorithmsTests, AlgorithmSplit)
 {
-  // std::string_view      text   = ".1......2.....3....4...5..6.";
-  // [[maybe_unused]] auto tokens = Split(".1......2.....3....4...5..6.", ".");
+  using range_t = std::views::all_t<const char(&)[30]>;
 
-  // for ( size_t index = 0; const std::string_view token : tokens )
-  // {
-  //   std::cout << "[" << ++index << "]: " << token << std::endl;
-  // }
+  [[maybe_unused]] constexpr bool IsRange      = std::ranges::range<range_t>;
+  [[maybe_unused]] constexpr bool IsMovable    = std::movable<range_t>;
+  [[maybe_unused]] constexpr bool IsEnableView = std::ranges::enable_view<range_t>;
+  [[maybe_unused]] constexpr bool IsView       = std::ranges::view<range_t>;
+
+  [[maybe_unused]] std::string_view text   = ".1......2.....3....4...5..6.";
+  [[maybe_unused]] auto             tokens = Split(".1......2.....3....4...5..6.", ".");
+
+  [[maybe_unused]] auto tokens_end = tokens.end();
+
+  size_t index = 0;
+  for ( [[maybe_unused]] std::string_view token : tokens )
+  {
+    std::cout << "[" << ++index << "]: " << token << std::endl;
+  }
 }
 
 TEST(AlgorithmsTests, RangesSplit)

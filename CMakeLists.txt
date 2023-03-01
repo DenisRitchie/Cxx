@@ -17,7 +17,18 @@ MessageLog("${PROJECT_NAME} v${PROJECT_VERSION}: ${PROJECT_DESCRIPTION}")
 if(MSVC)
     # https://learn.microsoft.com/en-us/cpp/build/reference/compiler-options?view=msvc-170
     # Warning level 4 and all warnings as errors
-    add_compile_options(/W4 /WX /await:strict /std:c++latest /Zc:__cplusplus)
+    add_compile_options(
+        # /Wall	                 # Enable all warnings, including warnings that are disabled by default.
+        /W4                      # Set output warning level.
+        /WX                      # Treat warnings as errors.
+        /await:strict            # Enable standard C++20 coroutine support with earlier language versions.
+        /std:c++latest           # The latest draft C++ standard preview features.
+        /Zc:__cplusplus          # Enable the __cplusplus macro to report the supported standard (off by default).
+        /permissive-             # Set standard-conformance mode.
+        /constexpr:backtrace10   # Show N constexpr evaluations in diagnostics (default: 10).
+        /constexpr:depth512      # Recursion depth limit for constexpr evaluation (default: 512).
+        /constexpr:steps100000   # Terminate constexpr evaluation after N steps (default: 100000).
+    )
 else()
     # Lots of warnings and all warnings as errors
     add_compile_options(-Wall -Wextra -pedantic -Werror)

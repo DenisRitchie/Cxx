@@ -71,7 +71,7 @@ struct ServiceFactory
     }
 };
 
-TEST(ServiceLocatorTest, LocalInstance)
+TEST(ServiceLocatorTests, LocalInstance)
 {
   ServiceLocator Locator;
   Locator.Register<IPerson, Person>();
@@ -94,7 +94,7 @@ TEST(ServiceLocatorTest, LocalInstance)
   EXPECT_EQ(*Locator.Resolve<int32_t>(), 150);
 }
 
-TEST(ServiceLocatorTest, ConstLocalInstance)
+TEST(ServiceLocatorTests, ConstLocalInstance)
 {
   const ServiceLocator Locator;
   EXPECT_THROW(Locator.GetService<IPerson>().GetValue(), std::logic_error);
@@ -108,7 +108,7 @@ TEST(ServiceLocatorTest, ConstLocalInstance)
   EXPECT_THROW(*Locator.Resolve<int32_t>(), std::bad_optional_access);
 }
 
-TEST(ServiceLocatorTest, UseFactoryAndValue)
+TEST(ServiceLocatorTests, UseFactoryAndValue)
 {
   ServiceLocator::UseFactory<PersonFactory, ServiceFactory>(StringFactory, Int32Factory, []() -> SemanticValue<std::string_view> { return "Text"sv; });
   ServiceLocator::UseFactory([]() -> SemanticValue<std::vector<int32_t>> { return std::vector{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }; });
@@ -131,7 +131,7 @@ TEST(ServiceLocatorTest, UseFactoryAndValue)
   }
 }
 
-TEST(ServiceLocatorTest, GlobalService)
+TEST(ServiceLocatorTests, GlobalService)
 {
   ServiceLocator::Default().Register<IPerson, Person>();
   ServiceLocator::Default().Register<IService, Service>("IService");

@@ -59,6 +59,31 @@ namespace Cxx::Algorithms::inline V1
   template <typename CharType = char, typename TraitType = std::char_traits<CharType>, typename AllocType = std::allocator<CharType>>
   std::basic_string<CharType, TraitType, AllocType> Join(auto&& container, auto&& separator);
 
+  /**
+   * @brief Separa una colección en Tokens según el Patrón indicado.
+   *
+   * @tparam Range Tipo de la colección a separar en Token.
+   * @tparam Pattern Tipo del patrón a separar en Token.
+   *
+   * @param range Colección que se separará en Token.
+   * @param pattern Patrón usando para separar la colección en Tokens.
+   *
+   * @return Regresa una lista de "subranges" con todos los Tokens.
+   */
+  template <std::ranges::contiguous_range Range, std::ranges::forward_range Pattern>
+  // requires std::ranges::view<Range> and std::ranges::view<Pattern> and std::indirectly_comparable<std::ranges::iterator_t<Range>, std::ranges::iterator_t<Pattern>, std::ranges::equal_to>
+  inline constexpr auto Split(Range&& range, Pattern&& pattern) noexcept
+  {
+    return std::views::all(range) | std::views::split(std::views::all(pattern));
+  }
+
+  // template <std::ranges::forward_range Range>
+  // requires std::ranges::view<Range>
+  // inline constexpr auto Split(Range&& range, std::ranges::range_value_t<Range>&& pattern) noexcept
+  // {
+  //   return range | std::ranges::split_view(pattern);
+  // }
+
   namespace Details::FunctionObjects
   {
     /**
@@ -360,19 +385,6 @@ namespace Cxx::Algorithms::inline V1
    */
   inline constexpr Details::FunctionObjects::RangeCompare RangeCompare{ NotQuiteObject::ConstructTag{} };
 } // namespace Cxx::Algorithms::inline V1
-
-/**
- * @brief
- *
- * @tparam Range
- * @tparam Pattern
- */
-template <std::ranges::contiguous_range Range, std::ranges::forward_range Pattern>
-requires std::ranges::view<Range> and std::ranges::view<Pattern> and std::indirectly_comparable<std::ranges::iterator_t<Range>, std::ranges::iterator_t<Pattern>, std::ranges::equal_to>
-class std::ranges::split_view<Range, Pattern> : public Cxx::Details::ContiguousSplitView<Range, Pattern>
-{
-    using Cxx::Details::ContiguousSplitView<Range, Pattern>::ContiguousSplitView;
-};
 
 #include "Implementations/Algorithms.tcc"
 
