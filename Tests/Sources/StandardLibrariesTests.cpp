@@ -1,29 +1,17 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <array>
-#include <algorithm>
-#include <charconv>
-#include <chrono>
-#include <concepts>
-#include <future>
-#include <iostream>
-#include <iomanip>
-#include <map>
-#include <numeric>
-#include <ranges>
-#include <set>
-#include <span>
-#include <spanstream>
-#include <string>
-#include <string_view>
-#include <thread>
-#include <type_traits>
-#include <typeindex>
-#include <typeinfo>
-#include <vector>
-#include <unordered_map>
-#include <unordered_set>
+#ifdef _MSVC_LANG
+# include <__msvc_all_public_headers.hpp>
+# include <__msvc_chrono.hpp>
+# include <__msvc_cxx_stdatomic.hpp>
+# include <__msvc_format_ucd_tables.hpp>
+# include <__msvc_int128.hpp>
+# include <__msvc_iter_core.hpp>
+# include <__msvc_system_error_abi.hpp>
+# include <__msvc_tzdb.hpp>
+# include <__msvc_xlocinfo_types.hpp>
+#endif
 
 using namespace std::string_literals;
 using namespace std::string_view_literals;
@@ -407,3 +395,53 @@ TEST(StandardLibraryTests, ArrayView)
   EXPECT_EQ(span_vector.data(), vector.data());
   EXPECT_EQ(span_span.data(), span.data());
 }
+
+namespace
+{
+
+  struct IgnoreEmpty : std::ranges::range_adaptor_closure<IgnoreEmpty>
+  {
+      template <std::ranges::viewable_range Range>
+      constexpr auto operator()(Range&& range) const noexcept
+      {
+        using subrange_t    = std::ranges::range_value_t<Range>;
+        using value_type_t  = std::ranges::range_value_t<subrange_t>;
+        using string_view_t = std::basic_string_view<value_type_t>;
+
+        return std::forward<Range>(range)                                               //
+             | std::views::filter([](auto&& subrange) { return not subrange.empty(); }) //
+             | std::views::transform([](auto&& subrange) { return string_view_t(subrange.begin(), subrange.end()); });
+      }
+  };
+
+  template <typename Type>
+  struct ToVector : std::ranges::range_adaptor_closure<ToVector<Type>>
+  {
+      template <std::ranges::viewable_range Range>
+      constexpr auto operator()(Range&& range) const noexcept
+      {
+        return std::vector<Type>(std::ranges::begin(range), std::ranges::end(range));
+      }
+  };
+
+  inline constexpr IgnoreEmpty ignore_empty{};
+
+  template <typename Type>
+  inline constexpr ToVector<Type> to_vector{};
+
+  TEST(StandardLibraryTests, SplitView)
+  {
+    auto&& tokens = "<=><=><=>Denis<=><=><=><=><=>Javier<=>Pérez<=>West<=><=><=><=><=><=><=><=><=>"sv //
+                  | std::views::split("<=>"sv) | ignore_empty | to_vector<std::string_view>;
+
+    EXPECT_EQ(tokens.size(), 4);
+
+    if ( tokens.size() == 4 )
+    {
+      EXPECT_EQ(tokens[0], "Denis"sv);
+      EXPECT_EQ(tokens[1], "Javier"sv);
+      EXPECT_EQ(tokens[2], "Pérez"sv);
+      EXPECT_EQ(tokens[3], "West"sv);
+    }
+  }
+} // namespace

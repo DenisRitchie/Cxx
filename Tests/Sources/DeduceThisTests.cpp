@@ -1,9 +1,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#define _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
-#define _SILENCE_CXX17_C_HEADER_DEPRECATION_WARNING
-
 #pragma warning(push)
 #pragma warning(disable : 4996)
 

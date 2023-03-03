@@ -44,12 +44,12 @@ namespace Cxx
   /**
    * @brief Helper type for the visitor.
    *
-   * @tparam Ts
+   * @tparam Ts Each of the base classes for Overloaded.
    */
   template <class... Ts>
   struct Overloaded : Ts...
   {
-      using Ts::operator()...;
+      using Ts::operator()...; /**< Exposes operator() from every base. */
   };
 
   /**
@@ -74,10 +74,10 @@ namespace Cxx
   [[nodiscard]] Type FakeCopyInit(Type) noexcept;
 
   /**
-   * @brief
+   * @brief Obtiene el tipo de retorno de la función de transformación "Projection" que usa std::iter_value_t<Iterator> como argumento.
    *
-   * @tparam Iterator
-   * @tparam Projection
+   * @tparam Iterator   Tipo del iterador que será usado como argumento desreferenciado de "Projection".
+   * @tparam Projection Función de transformación para std::iter_value_t<Iterator> a un nuevo tipo.
    */
   template <std::indirectly_readable Iterator, std::indirectly_regular_unary_invocable<Iterator> Projection>
   using projected_t = typename std::projected<Iterator, Projection>::value_type;
@@ -231,178 +231,83 @@ namespace Cxx
   {
     inline namespace StringLiterals
     {
-      [[nodiscard]] inline constexpr ZString<char>     operator"" _zs(const char* string, const size_t length) noexcept;
-      [[nodiscard]] inline constexpr ZString<wchar_t>  operator"" _zs(const wchar_t* string, const size_t length) noexcept;
-      [[nodiscard]] inline constexpr ZString<char8_t>  operator"" _zs(const char8_t* string, const size_t length) noexcept;
-      [[nodiscard]] inline constexpr ZString<char16_t> operator"" _zs(const char16_t* string, const size_t length) noexcept;
-      [[nodiscard]] inline constexpr ZString<char32_t> operator"" _zs(const char32_t* string, const size_t length) noexcept;
+      // clang-format off
+      [[nodiscard]] inline constexpr ZString<char>     operator""_zs(const     char* string, const size_t length) noexcept;
+      [[nodiscard]] inline constexpr ZString<wchar_t>  operator""_zs(const  wchar_t* string, const size_t length) noexcept;
+      [[nodiscard]] inline constexpr ZString<char8_t>  operator""_zs(const  char8_t* string, const size_t length) noexcept;
+      [[nodiscard]] inline constexpr ZString<char16_t> operator""_zs(const char16_t* string, const size_t length) noexcept;
+      [[nodiscard]] inline constexpr ZString<char32_t> operator""_zs(const char32_t* string, const size_t length) noexcept;
+      // clang-format on
     } // namespace StringLiterals
   }   // namespace Literals
 
-  namespace Details
+  template <typename Type, template <typename...> class Template>
+  inline constexpr bool is_specialization_v = false; // true if and only if Type is a specialization of Template
+
+  template <template <typename...> class Template, typename... Types>
+  inline constexpr bool is_specialization_v<Template<Types...>, Template> = true;
+
+  template <typename>
+  inline constexpr bool is_span_v = false;
+
+  template <typename Type, size_t Extent>
+  inline constexpr bool is_span_v<std::span<Type, Extent>> = true;
+
+  template <typename>
+  inline constexpr bool is_std_array_v = false;
+
+  template <typename Type, size_t Size>
+  inline constexpr bool is_std_array_v<std::array<Type, Size>> = true;
+
+  namespace Traits
   {
-    //
-    // https://brevzin.github.io/c++/2020/07/06/split-view/
-    //
+    template <typename T, typename = void>
+    struct StringTraits;
 
-    template <std::ranges::contiguous_range Range, std::ranges::forward_range Pattern>
-    requires std::ranges::view<Range> and std::ranges::view<Pattern> and std::indirectly_comparable<std::ranges::iterator_t<Range>, std::ranges::iterator_t<Pattern>, std::ranges::equal_to>
-    class ContiguousSplitView : public std::ranges::view_interface<ContiguousSplitView<Range, Pattern>>
+    template <std::ranges::contiguous_range T>
+    requires not requires { typename std::remove_cvref_t<T>::traits_type; } // clang-format off
+    struct StringTraits<T, std::void_t<std::ranges::range_value_t<std::remove_reference_t<T>>>> // clang-format on
     {
-      public:
-        ContiguousSplitView() = default;
+        using Type       = std::ranges::range_value_t<std::remove_reference_t<T>>;
+        using TraitsType = std::char_traits<Type>;
 
-        ContiguousSplitView(Range&& range, Pattern&& pattern)
-          : m_Range{ std::move(range) }
-          , m_Pattern{ std::move(pattern) }
-        {
-        }
-
-        template <std::ranges::contiguous_range Container>
-        requires std::constructible_from<Range, std::ranges::views::all_t<Container>>
-        ContiguousSplitView(Container&& range, std::ranges::range_value_t<Container>&& pattern)
-          : m_Range{ std::ranges::views::all(std::forward<Container>(range)) }
-          , m_Pattern{ std::ranges::single_view(std::move(pattern)) }
-        {
-        }
-
-        class Iterator
-        {
-          public:
-            friend struct Sentinel;
-
-            using underlying_t = std::remove_reference_t<std::ranges::range_reference_t<Range>>;
-
-            struct value_type : std::span<underlying_t>
-            {
-                using std::span<underlying_t>::span;
-
-                operator std::basic_string_view<std::ranges::range_value_t<Range>>() const noexcept
-                requires Concepts::Character<std::ranges::range_value_t<Range>>
-                {
-                  return { this->data(), this->size() };
-                }
-            };
-
-            using iterator_category = std::forward_iterator_tag;
-            using iterator_concept  = std::forward_iterator_tag;
-            using pointer           = value_type*;
-            using const_pointer     = const value_type*;
-            using reference         = value_type&;
-            using const_reference   = const value_type&;
-            using difference_type   = std::ptrdiff_t;
-
-            Iterator() = default;
-
-            Iterator(ContiguousSplitView* parent)
-              : m_Parent{ parent }
-              , m_Current{ std::ranges::begin(parent->m_Range) }
-              , m_Next{ LookupNext() }
-            {
-            }
-
-            Iterator(std::default_sentinel_t, ContiguousSplitView* parent)
-              : m_Parent{ parent }
-              , m_Current{ std::ranges::end(parent->m_Range) }
-              , m_Next{}
-            {
-            }
-
-            bool operator==(const Iterator& right) const noexcept
-            {
-              return m_Current == right.m_Current;
-            }
-
-            auto operator++() -> Iterator&
-            {
-              if ( m_Next != std::ranges::end(m_Parent->m_Range) )
-              {
-                m_Current = std::ranges::next(m_Next);
-                m_Next    = LookupNext();
-              }
-              else
-              {
-                m_Current = m_Next;
-              }
-
-              return *this;
-            }
-
-            auto operator++(int32_t) -> Iterator
-            {
-              auto temporary = *this;
-              ++*this;
-              return temporary;
-            }
-
-            auto operator*() const -> value_type
-            {
-              return { m_Current, m_Next };
-            }
-
-          private:
-            auto LookupNext() const -> std::ranges::iterator_t<Range>
-            {
-              auto subrange = std::ranges::search(std::ranges::subrange(m_Current, std::ranges::end(m_Parent->m_Range)), m_Parent->m_Pattern);
-              return subrange.begin();
-            }
-
-            ContiguousSplitView*           m_Parent{ nullptr };
-            std::ranges::iterator_t<Range> m_Current;
-            std::ranges::iterator_t<Range> m_Next;
-        };
-
-        struct Sentinel
-        {
-            bool operator==(const Iterator& right) const noexcept
-            {
-              return right.m_Current == m_Sentinel;
-            }
-
-            std::ranges::sentinel_t<Range> m_Sentinel;
-        };
-
-        auto begin() -> Iterator
-        {
-          if ( not m_CachedBegin )
-          {
-            m_CachedBegin.emplace(this);
-          }
-
-          return *m_CachedBegin;
-        }
-
-        auto end() -> Sentinel
-        {
-          return { std::ranges::end(m_Range) };
-        }
-
-        auto end() -> Iterator
-        requires std::ranges::common_range<Range>
-        {
-          return { std::default_sentinel, this };
-        }
-
-      private:
-        Range                   m_Range;
-        Pattern                 m_Pattern;
-        std::optional<Iterator> m_CachedBegin;
+        inline static constexpr bool IsInternalTrait = false;
     };
-  } // namespace Details
-} // namespace Cxx
 
-/**
- * @brief
- *
- * @tparam Range
- * @tparam Pattern
- */
-template <std::ranges::contiguous_range Range, std::ranges::forward_range Pattern>
-requires std::ranges::view<Range> and std::ranges::view<Pattern> and std::indirectly_comparable<std::ranges::iterator_t<Range>, std::ranges::iterator_t<Pattern>, std::ranges::equal_to>
-class std::ranges::split_view<Range, Pattern> : public Cxx::Details::ContiguousSplitView<Range, Pattern>
-{
-    using Cxx::Details::ContiguousSplitView<Range, Pattern>::ContiguousSplitView;
-};
+    template <std::ranges::contiguous_range T>
+    struct StringTraits<T, std::void_t<std::ranges::range_value_t<std::remove_reference_t<T>>, typename std::remove_cvref_t<T>::traits_type>>
+    {
+        using Type       = std::ranges::range_value_t<std::remove_reference_t<T>>;
+        using TraitsType = typename std::remove_cvref_t<T>::traits_type;
+
+        inline static constexpr bool IsInternalTrait = true;
+    };
+
+    template <typename T>
+    requires std::is_pointer_v<std::remove_cvref_t<T>>
+    struct StringTraits<T, std::void_t<typename std::iterator_traits<std::remove_cvref_t<T>>::value_type>>
+    {
+        using Type       = typename std::iterator_traits<std::remove_cvref_t<T>>::value_type;
+        using TraitsType = std::char_traits<Type>;
+
+        inline static constexpr bool IsInternalTrait = false;
+    };
+
+    template <typename T>
+    using CharacterTypeOf = typename Traits::StringTraits<T>::Type;
+
+    template <typename T>
+    using CharacterTraitsOf = typename Traits::StringTraits<T>::TraitsType;
+  } // namespace Traits
+
+  namespace Concepts
+  {
+    template <typename StringType>
+    concept StringViewCompatible =                                   //
+      requires { typename Traits::CharacterTypeOf<StringType>; } and //
+      std::constructible_from<std::basic_string_view<Traits::CharacterTypeOf<StringType>, Traits::CharacterTraitsOf<StringType>>, StringType>;
+  }
+} // namespace Cxx
 
 #include "Implementations/Utility.tcc"
 

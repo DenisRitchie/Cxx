@@ -17,7 +17,11 @@
             "defines": [
                 "_DEBUG",
                 "_UNICODE",
-                "UNICODE"
+                "UNICODE",
+                "_SILENCE_CXX17_C_HEADER_DEPRECATION_WARNING",
+                "_SILENCE_CXX20_CISO646_REMOVED_WARNING",
+                "_SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING",
+                "_SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS"
             ],
             "cStandard": "c17",
             "cppStandard": "c++23",

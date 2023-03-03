@@ -205,7 +205,8 @@
         "syncstream": "cpp",
         "valarray": "cpp",
         "generator": "cpp",
-        "resumable": "cpp"
+        "resumable": "cpp",
+        "ccomplex": "cpp"
     },
     "C_Cpp.files.exclude": {
         "**/out": true,

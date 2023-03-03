@@ -39,39 +39,27 @@ namespace views = std::ranges::views;
 
 TEST(AlgorithmsTests, AlgorithmSplit)
 {
-  using range_t = std::views::all_t<const char(&)[30]>;
+  using enum Cxx::Algorithms::StringSplitOptions;
 
-  [[maybe_unused]] constexpr bool IsRange      = std::ranges::range<range_t>;
-  [[maybe_unused]] constexpr bool IsMovable    = std::movable<range_t>;
-  [[maybe_unused]] constexpr bool IsEnableView = std::ranges::enable_view<range_t>;
-  [[maybe_unused]] constexpr bool IsView       = std::ranges::view<range_t>;
+  auto&& numbers = Split<RemoveEmptyEntries>(".1......2.....3....4...5..6.", ".") | std::ranges::to<vector>();
+  auto&& tokens  = Split<None>(".1......2.....3....4...5..6.", ".") | std::ranges::to<vector>();
 
-  [[maybe_unused]] std::string_view text   = ".1......2.....3....4...5..6.";
-  [[maybe_unused]] auto             tokens = Split(".1......2.....3....4...5..6.", ".");
+  EXPECT_EQ(tokens.size(), 23);
+  EXPECT_EQ(numbers.size(), 6);
 
-  [[maybe_unused]] auto tokens_end = tokens.end();
+  EXPECT_EQ(numbers[0], "1");
+  EXPECT_EQ(numbers[1], "2");
+  EXPECT_EQ(numbers[2], "3");
+  EXPECT_EQ(numbers[3], "4");
+  EXPECT_EQ(numbers[4], "5");
+  EXPECT_EQ(numbers[5], "6");
 
-  size_t index = 0;
-  for ( [[maybe_unused]] std::string_view token : tokens )
-  {
-    std::cout << "[" << ++index << "]: " << token << std::endl;
-  }
-}
-
-TEST(AlgorithmsTests, RangesSplit)
-{
-  // [[maybe_unused]] std::string_view text   = ".1......2.....3....4...5..6.";
-  // [[maybe_unused]] auto             tokens = text | std::views::split(std::string_view{ "." });
-
-  // for ( size_t index = 0; const auto token : tokens )
-  // {
-  //   std::string_view value(&*token.begin(), token.size());
-  //   std::cout << "[" << ++index << "]: " << value << std::endl;
-  // }
-}
-
-TEST(AlgorithmsTests, CompareRanges)
-{
+  EXPECT_EQ(tokens[1], "1");
+  EXPECT_EQ(tokens[7], "2");
+  EXPECT_EQ(tokens[12], "3");
+  EXPECT_EQ(tokens[16], "4");
+  EXPECT_EQ(tokens[19], "5");
+  EXPECT_EQ(tokens[21], "6");
 }
 
 TEST(AlgorithmsTests, CompareStrings)

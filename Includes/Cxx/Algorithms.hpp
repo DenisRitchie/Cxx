@@ -40,6 +40,69 @@
 #include <cuchar>
 #include <ctime>
 
+namespace Cxx
+{
+  namespace Algorithms
+  {
+    /**
+     * @brief Specifies whether applicable Overload:Cxx::Algorithms::Split method overloads include or omit empty substrings from the return value.
+     */
+    enum class StringSplitOptions
+    {
+      /**
+       * @brief The return value includes array elements that contain an empty string.
+       */
+      None = 0x0,
+
+      /**
+       * @brief The return value does not include array elements that contain an empty string.
+       */
+      RemoveEmptyEntries = 0x1
+    };
+
+    namespace Views
+    {
+      /**
+       * @brief View que permite ignorar los valores vacíos de un Rango.
+       */
+      struct IgnoreEmptyValuesAdaptorClosure : std::ranges::range_adaptor_closure<IgnoreEmptyValuesAdaptorClosure>
+      {
+          template <std::ranges::viewable_range Range>
+          requires std::ranges::viewable_range<std::ranges::range_value_t<Range>> and // clang-format off
+                   requires(std::ranges::range_value_t<Range>&& value)
+                   {
+                     { value.empty() } -> Concepts::BooleanTestable;
+                   } // clang-format on
+          [[nodiscard]] constexpr auto operator()(Range&& range) const noexcept
+          {
+            return std::forward<Range>(range) | std::views::filter([](auto&& value) { return not value.empty(); });
+          }
+      };
+
+      inline constexpr IgnoreEmptyValuesAdaptorClosure IgnoreEmptyValues{};
+
+      struct ValuesToStringViewAdaptorClosure : std::ranges::range_adaptor_closure<ValuesToStringViewAdaptorClosure>
+      {
+          template <std::ranges::viewable_range Range>
+          requires std::ranges::viewable_range<std::ranges::range_value_t<Range>> and Concepts::StringViewCompatible<std::ranges::range_value_t<Range>>
+          [[nodiscard]] constexpr auto operator()(Range&& range) const noexcept
+          {
+            using subrange_t    = std::ranges::range_value_t<Range>;
+            using value_type_t  = std::ranges::range_value_t<subrange_t>;
+            using string_view_t = std::basic_string_view<value_type_t>;
+
+            return std::forward<Range>(range) | std::views::transform([](auto&& value) { return string_view_t(value.begin(), value.end()); });
+          }
+      };
+
+      inline constexpr ValuesToStringViewAdaptorClosure ValuesToStringView{};
+    } // namespace Views
+
+  } // namespace Algorithms
+
+  namespace Views = Algorithms::Views;
+} // namespace Cxx
+
 namespace Cxx::Algorithms::inline V1
 {
   /**
@@ -60,29 +123,33 @@ namespace Cxx::Algorithms::inline V1
   std::basic_string<CharType, TraitType, AllocType> Join(auto&& container, auto&& separator);
 
   /**
-   * @brief Separa una colección en Tokens según el Patrón indicado.
+   * @brief Separa una Cadena en una lista de Tokens según el Patrón indicado.
    *
-   * @tparam Range Tipo de la colección a separar en Token.
-   * @tparam Pattern Tipo del patrón a separar en Token.
+   * @tparam Options Opción para indicar si se debe regresar un rango con valores vacíos o sin ellos.
    *
-   * @param range Colección que se separará en Token.
-   * @param pattern Patrón usando para separar la colección en Tokens.
+   * @param[in] Text    Cadena que será separada en Tokens.
+   * @param[in] Pattern Cadena usada como Patrón para separar la Cadena Text en Tokens.
    *
-   * @return Regresa una lista de "subranges" con todos los Tokens.
+   * @return Regresa una lista de std::basic_string_view<CharType, TraitType> con todos los Tokens.
    */
-  template <std::ranges::contiguous_range Range, std::ranges::forward_range Pattern>
-  // requires std::ranges::view<Range> and std::ranges::view<Pattern> and std::indirectly_comparable<std::ranges::iterator_t<Range>, std::ranges::iterator_t<Pattern>, std::ranges::equal_to>
-  inline constexpr auto Split(Range&& range, Pattern&& pattern) noexcept
+  template <StringSplitOptions Options = StringSplitOptions::RemoveEmptyEntries>
+  [[nodiscard]] inline constexpr auto Split(Concepts::StringViewCompatible auto&& Text, Concepts::StringViewCompatible auto&& Pattern) noexcept
+  requires std::same_as<Traits::CharacterTypeOf<decltype(Text)>, Traits::CharacterTypeOf<decltype(Pattern)>>
   {
-    return std::views::all(range) | std::views::split(std::views::all(pattern));
-  }
+    using enum StringSplitOptions;
+    using StringView = std::basic_string_view<Traits::CharacterTypeOf<decltype(Text)>, Traits::CharacterTraitsOf<decltype(Text)>>;
 
-  // template <std::ranges::forward_range Range>
-  // requires std::ranges::view<Range>
-  // inline constexpr auto Split(Range&& range, std::ranges::range_value_t<Range>&& pattern) noexcept
-  // {
-  //   return range | std::ranges::split_view(pattern);
-  // }
+    auto&& tokens = StringView{ Text } | std::views::split(StringView{ Pattern }) | Views::ValuesToStringView;
+
+    if constexpr ( Options == RemoveEmptyEntries )
+    {
+      return tokens | Views::IgnoreEmptyValues;
+    }
+    else
+    {
+      return tokens;
+    }
+  }
 
   namespace Details::FunctionObjects
   {
