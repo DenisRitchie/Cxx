@@ -163,7 +163,7 @@ namespace std::ranges
     template <class Container>
     struct ToClassFunction
     {
-        static_assert(not view<Container>, "not view<_Container>");
+        static_assert(not view<Container>, "not view<Container>");
 
         template <input_range Range, class... Types>
         [[nodiscard]] constexpr auto operator()(Range&& range, Types&&... args) const

@@ -42,12 +42,13 @@ namespace Cxx::LINQ::MethodSyntax
         template <typename CharType, typename TraitType, typename AllocatorType>
         constexpr auto&& operator()(const std::basic_string<CharType, TraitType, AllocatorType>& value) const noexcept
         {
-          CharType*   letter      = const_cast<CharType*>(value.data());
-          const auto& ctype_facet = std::use_facet<std::ctype_byname<char>>(std::locale());
+          CharType* letter = const_cast<CharType*>(value.data());
+          // TODO: const auto& ctype_facet = std::use_facet<std::ctype_byname<char>>(std::locale());
 
           for ( ; *letter != '\0'; ++letter )
           {
-            *letter = static_cast<CharType>(ctype_facet.toupper(*letter));
+            // TODO: *letter = static_cast<CharType>(ctype_facet.toupper(*letter));
+            *letter = std::toupper(*letter, std::locale()); // TODO: Crear el facet para cada tipo de caracter.
           }
 
           return value;
@@ -59,12 +60,13 @@ namespace Cxx::LINQ::MethodSyntax
         template <typename CharType, typename TraitType, typename AllocatorType>
         constexpr auto&& operator()(const std::basic_string<CharType, TraitType, AllocatorType>& value) const noexcept
         {
-          CharType*   letter      = const_cast<CharType*>(value.data());
-          const auto& ctype_facet = std::use_facet<std::ctype_byname<char>>(std::locale());
+          CharType* letter = const_cast<CharType*>(value.data());
+          // TODO: const auto& ctype_facet = std::use_facet<std::ctype_byname<char>>(std::locale());
 
           for ( ; *letter != '\0'; ++letter )
           {
-            *letter = static_cast<CharType>(ctype_facet.tolower(*letter));
+            // TODO: *letter = static_cast<CharType>(ctype_facet.tolower(*letter));
+            *letter = std::tolower(*letter, std::locale()); // TODO: Crear el facet para cada tipo de caracter.
           }
 
           return value;
