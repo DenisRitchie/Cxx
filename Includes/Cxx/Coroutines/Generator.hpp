@@ -39,7 +39,7 @@ namespace Cxx::Coroutines
           template <class U>
           U&& await_transform(U&& whatever) noexcept;
 
-          static void* operator new(std::size_t size);
+          static void* operator new(std::size_t size) noexcept;
           static void  operator delete(void* pointer, std::size_t size) noexcept;
       };
 

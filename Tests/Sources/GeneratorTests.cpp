@@ -40,7 +40,7 @@ TEST(GeneratorTests, GeneratorQueries)
 {
   std::vector<std::string> values = { "Denis", "Javier", "West", "Johan", "Jeremy", "Kenneth", "Juan", "David" };
 
-  auto names_by_word_size = [&values](const int32_t word_size) -> Generator<std::tuple<int32_t, std::string_view>>
+  auto names_by_word_size = [&values](const size_t word_size) -> Generator<std::tuple<int32_t, std::string_view>>
   {
     for ( int32_t index = -1; const auto& value : values )
     {

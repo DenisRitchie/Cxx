@@ -18,11 +18,23 @@ struct WrapperString
       return this->Text == text;
     }
 
+#ifdef __cpp_explicit_this_parameter
     template <typename Self>
     decltype(auto) operator->(this Self&& This)
     {
       return std::addressof(This.Text);
     }
+#else
+    std::string* operator->()
+    {
+      return std::addressof(Text);
+    }
+
+    const std::string* operator->() const
+    {
+      return std::addressof(Text);
+    }
+#endif
 
     std::string Text;
 };

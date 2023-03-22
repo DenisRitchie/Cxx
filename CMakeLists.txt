@@ -37,8 +37,26 @@ if(MSVC)
         _SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS
     )
 else()
+    # https://gcc.gnu.org/onlinedocs/gcc/Invoking-GCC.html
+    # https://gcc.gnu.org/onlinedocs/gcc/C-Dialect-Options.html
+    # https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
     # Lots of warnings and all warnings as errors
-    add_compile_options(-Wall -Wextra -pedantic -Werror)
+    add_compile_options(
+        # -Winvalid-constexpr          # This warning is enabled as a pedantic warning by default in C++20 and earlier. In C++23, -Winvalid-constexpr can be turned on, in which case it will be an ordinary warning.
+        -Wall                          # This enables all the warnings about constructions that some users consider questionable, and that are easy to avoid (or modify to prevent the warning), even in conjunction with macros. This also enables some language-specific warnings described in C++ Dialect Options and Objective-C and Objective-C++ Dialect Options.
+        -Wextra                        # This enables some extra warning flags that are not enabled by -Wall. (This option used to be called -W. The older name is still supported, but the newer name is more descriptive.)
+        -Wpedantic                     # Issue all the warnings demanded by strict ISO C and ISO C++; reject all programs that use forbidden extensions, and some other programs that do not follow ISO C and ISO C++. For ISO C, follows the version of the ISO C standard specified by any -std option used.
+        -Werror                        # Make all warnings into errors.
+        -std=gnu++23                   # Determine the language standard. See Language Standards Supported by GCC, for details of these standard versions. This option is currently only supported when compiling C or C++.
+        -fstrict-enums                 # Allow the compiler to optimize using the assumption that a value of enumerated type can only be one of the values of the enumeration (as defined in the C++ standard; basically, a value that can be represented in the minimum number of bits needed to represent all the enumerators). This assumption may not be valid if the program uses a cast to convert an arbitrary integer value to the enumerated type.
+        -fpermissive                   # Downgrade some diagnostics about nonconformant code from errors to warnings. Thus, using -fpermissive allows some nonconforming code to compile.
+        -fconstexpr-depth=512          # Set the maximum nested evaluation depth for C++11 constexpr functions to n. A limit is needed to detect endless recursion during constant expression evaluation. The minimum specified by the standard is 512.
+        -fconstexpr-cache-depth=16     # Set the maximum level of nested evaluation depth for C++11 constexpr functions that will be cached to n. This is a heuristic that trades off compilation speed (when the cache avoids repeated calculations) against memory consumption (when the cache grows very large from highly recursive evaluations). The default is 8. Very few users are likely to want to adjust it, but if your code does heavy constexpr calculations you might want to experiment to find which value works best for you.
+        -fconstexpr-loop-limit=262144  # Set the maximum number of iterations for a loop in C++14 constexpr functions to n. A limit is needed to detect infinite loops during constant expression evaluation. The default is 262144 (1<<18).
+        -fconstexpr-ops-limit=33554432 # Set the maximum number of operations during a single constexpr evaluation. Even when number of iterations of a single loop is limited with the above limit, if there are several nested loops and each of them has many iterations but still smaller than the above limit, or if in a body of some loop or even outside of a loop too many expressions need to be evaluated, the resulting constexpr evaluation might take too long. The default is 33554432 (1<<25).
+        -ftemplate-backtrace-limit=10  # Set the maximum number of template instantiation notes for a single warning or error to n. The default value is 10.
+        -ftemplate-depth=1024          # Set the maximum instantiation depth for template classes to n. A limit on the template instantiation depth is needed to detect endless recursions during template class instantiation. ANSI/ISO C++ conforming programs must not rely on a maximum depth greater than 17 (changed to 1024 in C++11). The default value is 900, as the compiler can run out of stack space before hitting 1024 in some situations.
+    )
 endif()
 
 add_library(${PROJECT_NAME} STATIC)

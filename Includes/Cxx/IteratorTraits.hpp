@@ -106,6 +106,34 @@ namespace Cxx::Traits
       using const_reference   = DetectionIdiom::Traits::IteratorTraits<Iterator>::ConstReferenceOrDefault;   // typename Iterator::const_reference;
       using difference_type   = DetectionIdiom::Traits::IteratorTraits<Iterator>::DifferenceTypeOrDefault;   // typename Iterator::difference_type                                         //
   };
+
+  template <typename Iterator>
+  requires std::is_object_v<Iterator>
+  struct IteratorTraits<Iterator*>
+  {
+      using iterator_concept  = std::contiguous_iterator_tag;
+      using iterator_category = std::random_access_iterator_tag;
+      using value_type        = std::remove_cv_t<Iterator>;
+      using difference_type   = std::ptrdiff_t;
+      using pointer           = Iterator*;
+      using reference         = Iterator&;
+      using const_pointer     = const Iterator*;
+      using const_reference   = const Iterator&;
+  };
+
+  template <typename Iterator>
+  requires std::is_object_v<Iterator>
+  struct IteratorTraits<const Iterator*>
+  {
+      using iterator_concept  = std::contiguous_iterator_tag;
+      using iterator_category = std::random_access_iterator_tag;
+      using value_type        = std::remove_cv_t<Iterator>;
+      using difference_type   = std::ptrdiff_t;
+      using pointer           = Iterator*;
+      using reference         = Iterator&;
+      using const_pointer     = const Iterator*;
+      using const_reference   = const Iterator&;
+  };
 } // namespace Cxx::Traits
 
 namespace Cxx::Concepts
@@ -115,20 +143,20 @@ namespace Cxx::Concepts
   template <typename T>
   concept Iterator = requires
   {
-    typename T::value_type;
-    typename T::iterator_category;
-    typename T::pointer;
-    typename T::reference;
-    typename T::difference_type;
+    typename std::iterator_traits<T>::value_type;
+    typename std::iterator_traits<T>::iterator_category;
+    typename std::iterator_traits<T>::pointer;
+    typename std::iterator_traits<T>::reference;
+    typename std::iterator_traits<T>::difference_type;
   };
 
   template <typename T>
-  concept Cpp20Iterator = Iterator<T> and requires
-  {
-    typename T::iterator_concept;
-    typename T::const_reference;
-    typename T::const_pointer;
-  };
+  concept Cpp20Iterator = Iterator<T> and
+    (
+      std::is_pointer_v<T>
+        and requires { typename std::iterator_traits<T>::iterator_concept; }
+        or  requires { typename T::iterator_concept; }
+    );
 
   // clang-format on
 

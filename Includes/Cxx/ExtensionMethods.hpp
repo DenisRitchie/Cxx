@@ -1,21 +1,17 @@
 #ifndef C35229B1_A65B_4639_97F8_E0C58134BB4F
 #define C35229B1_A65B_4639_97F8_E0C58134BB4F
 
-#include <string>
-#include <string_view>
-#include <iterator>
 #include <locale>
-#include <utility>
 
+#include "Algorithms.hpp"
 #include "FunctionTraits.hpp"
-#include "Coroutines/Generator.hpp"
 
 namespace Cxx
 {
   template <typename ValueType, typename ExtensionType>
   constexpr auto operator->*(ValueType&& Value, ExtensionType&& Extension) -> std::invoke_result_t<ExtensionType, ValueType>
   {
-    return Extension(Value);
+    return std::invoke(std::forward<ExtensionType>(Extension), std::forward<ValueType>(Value));
   }
 } // namespace Cxx
 

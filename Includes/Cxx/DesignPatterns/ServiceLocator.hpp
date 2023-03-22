@@ -91,6 +91,7 @@ namespace Cxx::DesignPatterns
         return *this;
       }
 
+#ifdef __cpp_explicit_this_parameter
       template <typename ServiceType, typename Self>
       auto GetService(this Self&& This) //
         -> std::add_lvalue_reference_t<std::conditional_t<
@@ -110,7 +111,31 @@ namespace Cxx::DesignPatterns
 
         throw std::logic_error("Unregistered Service");
       }
+#else
+      template <typename ServiceType>
+      ServiceType& GetService()
+      {
+        if ( auto It = m_Services.find(std::type_index(typeid(ServiceType))); It != m_Services.end() )
+        {
+          return *std::any_cast<SemanticValue<ServiceType>&>(It->second);
+        }
 
+        throw std::logic_error("Unregistered Service");
+      }
+
+      template <typename ServiceType>
+      const ServiceType& GetService() const
+      {
+        if ( auto It = m_Services.find(std::type_index(typeid(ServiceType))); It != m_Services.end() )
+        {
+          return *std::any_cast<const SemanticValue<ServiceType>&>(It->second);
+        }
+
+        throw std::logic_error("Unregistered Service");
+      }
+#endif
+
+#ifdef __cpp_explicit_this_parameter
       template <typename ServiceType, typename Self>
       auto Resolve(this Self&& This) noexcept //
         -> std::conditional_t<
@@ -130,6 +155,29 @@ namespace Cxx::DesignPatterns
 
         return std::nullopt;
       }
+#else
+      template <typename ServiceType>
+      Optional<Reference<ServiceType>> Resolve() noexcept
+      {
+        if ( auto It = m_Services.find(std::type_index(typeid(ServiceType))); It != m_Services.end() )
+        {
+          return *std::any_cast<SemanticValue<ServiceType>&>(It->second);
+        }
+
+        return std::nullopt;
+      }
+
+      template <typename ServiceType>
+      const Optional<const Reference<const ServiceType>> Resolve() const noexcept
+      {
+        if ( auto It = m_Services.find(std::type_index(typeid(ServiceType))); It != m_Services.end() )
+        {
+          return *std::any_cast<const SemanticValue<ServiceType>&>(It->second);
+        }
+
+        return std::nullopt;
+      }
+#endif
 
       template <typename ServiceType>
       inline static Optional<SemanticValue<ServiceType>> Value;

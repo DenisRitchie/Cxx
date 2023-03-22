@@ -98,6 +98,7 @@
     {
       "name": "linux-debug",
       "displayName": "Linux Debug",
+      "description": "Target the Windows Subsystem for Linux (WSL) or a remote Linux system.",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
@@ -163,6 +164,13 @@
       "description": "Windows x64-release",
       "configurePreset": "x64-release",
       "jobs": 12
+    },
+    {
+      "name": "debug-build-linux",
+      "description": "Linux x64-debug",
+      "displayName": "Linux x64-debug",
+      "configurePreset": "linux-debug",
+      "jobs": 14
     }
   ],
   "testPresets": [

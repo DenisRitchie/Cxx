@@ -1,7 +1,10 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <Cxx/Platform.hpp>
+
 #ifdef _MSVC_LANG
+
 # include <__msvc_all_public_headers.hpp>
 # include <__msvc_chrono.hpp>
 # include <__msvc_cxx_stdatomic.hpp>
@@ -11,6 +14,12 @@
 # include <__msvc_system_error_abi.hpp>
 # include <__msvc_tzdb.hpp>
 # include <__msvc_xlocinfo_types.hpp>
+
+#elif defined(__GNUC__)
+
+# include <Cxx/Algorithms.hpp>
+# include <bits/stdc++.h>
+
 #endif
 
 using namespace std::string_literals;
@@ -42,7 +51,7 @@ namespace
   struct StringTraits;
 
   template <std::ranges::contiguous_range T>
-  requires not requires { typename std::remove_cvref_t<T>::traits_type; } // clang-format off
+  requires(not requires { typename std::remove_cvref_t<T>::traits_type; }) // clang-format off
   struct StringTraits<T, std::void_t<std::ranges::range_value_t<std::remove_reference_t<T>>>> // clang-format on
   {
       using Type       = std::ranges::range_value_t<std::remove_reference_t<T>>;
@@ -363,8 +372,10 @@ TEST(StandardLibraryTests, StringView)
 
 TEST(StandardLibraryTests, ArrayView)
 {
-  [[maybe_unused]] const std::string                  string      = "Text";
-  [[maybe_unused]] const std::vector<char>            vector      = { std::from_range, "Text" };
+  [[maybe_unused]] const std::string string = "Text";
+#ifdef _MSVC_LANG
+  [[maybe_unused]] const std::vector<char> vector = { std::from_range, "Text" };
+#endif
   [[maybe_unused]] constexpr std::string_view         string_view = "Text";
   [[maybe_unused]] constexpr const char*              pointer     = "Text";
   [[maybe_unused]] constexpr const char               array[5]    = "Text";
@@ -384,7 +395,9 @@ TEST(StandardLibraryTests, ArrayView)
   [[maybe_unused]] std::span<const char> span_pointer{ pointer, 4 };
   [[maybe_unused]] std::span<const char> span_array{ array };
   [[maybe_unused]] std::span<const char> span_std_array{ std_array };
+#ifdef _MSVC_LANG
   [[maybe_unused]] std::span<const char> span_vector{ vector };
+#endif
   [[maybe_unused]] std::span<const char> span_span{ span };
 
   EXPECT_EQ(span_string.data(), string.data());
@@ -392,13 +405,14 @@ TEST(StandardLibraryTests, ArrayView)
   EXPECT_EQ(span_pointer.data(), pointer);
   EXPECT_EQ(span_array.data(), array);
   EXPECT_EQ(span_std_array.data(), std_array.data());
+#ifdef _MSVC_LANG
   EXPECT_EQ(span_vector.data(), vector.data());
+#endif
   EXPECT_EQ(span_span.data(), span.data());
 }
 
 namespace
 {
-
   struct IgnoreEmpty : std::ranges::range_adaptor_closure<IgnoreEmpty>
   {
       template <std::ranges::viewable_range Range>

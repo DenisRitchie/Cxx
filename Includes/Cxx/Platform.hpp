@@ -58,6 +58,7 @@
 
   #define DISABLE_WARNING_UNREFERENCED_FORMAL_PARAMETER DISABLE_WARNING(4100)
   #define DISABLE_WARNING_UNREFERENCED_FUNCTION         DISABLE_WARNING(4505)
+  #define DISABLE_WARNING_RESERVED_USER_DEFINED_LITERAL DISABLE_WARNING(4455)
   // Other warnings you want to deactivate...
 #elif defined(__GNUC__) || defined(__clang__)
   #define DO_PRAGMA(X)                                  _Pragma(#X)
@@ -67,12 +68,14 @@
 
   #define DISABLE_WARNING_UNREFERENCED_FORMAL_PARAMETER DISABLE_WARNING(-Wunused-parameter)
   #define DISABLE_WARNING_UNREFERENCED_FUNCTION         DISABLE_WARNING(-Wunused-function)
+  #define DISABLE_WARNING_RESERVED_USER_DEFINED_LITERAL DISABLE_WARNING(-Wliteral-suffix)
   // Other warnings you want to deactivate...
 #else
   #define DISABLE_WARNING_PUSH
   #define DISABLE_WARNING_POP
   #define DISABLE_WARNING_UNREFERENCED_FORMAL_PARAMETER
   #define DISABLE_WARNING_UNREFERENCED_FUNCTION
+  #define DISABLE_WARNING_RESERVED_USER_DEFINED_LITERAL
   // Other warnings you want to deactivate...
 #endif
 

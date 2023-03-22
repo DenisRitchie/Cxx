@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(
-    CxxLibraries
+    CxxLibrariesTests
     LANGUAGES C CXX
     VERSION 1.0.0.0
     DESCRIPTION "Test: ${CMAKE_PROJECT_DESCRIPTION}"
@@ -19,6 +19,9 @@ MessageLogArray("${cpp_source_files}")
 
 # GoogleTest requires at least C++14
 set(CMAKE_CXX_STANDARD 23)
+
+# https://www.foonathan.net/2022/06/cmake-fetchcontent/
+# https://cmake.org/cmake/help/latest/module/FetchContent.html
 
 include(FetchContent)
 FetchContent_Declare(

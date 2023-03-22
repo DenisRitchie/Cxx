@@ -66,7 +66,7 @@ namespace Cxx::Coroutines
   }
 
   template <typename Type, typename Alloc>
-  void* Generator<Type, Alloc>::promise_type::operator new(std::size_t size)
+  void* Generator<Type, Alloc>::promise_type::operator new(std::size_t size) noexcept
   {
     alloc_byte alloc{};
     return std::allocator_traits<alloc_byte>::allocate(alloc, size);

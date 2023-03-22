@@ -1,8 +1,16 @@
 #ifndef EDE2117E_A7D9_4EB3_892C_7B76526D6A96
 #define EDE2117E_A7D9_4EB3_892C_7B76526D6A96
 
+#include <cinttypes>
 #include <concepts>
 #include <compare>
+#include <utility>
+
+namespace Cxx::Traits
+{
+  template <typename>
+  inline constexpr bool AlwaysFalse = false; // false value attached to a dependent name (for static_assert)
+}
 
 namespace Cxx::Traits::TypeParameters
 {
@@ -57,13 +65,13 @@ namespace Cxx::Traits::TypeParameters::inline V2
   template <typename... Types>
   struct Arguments;
 
-  template <size_t Index, typename ArgumentPack>
+  template <std::size_t Index, typename ArgumentPack>
   struct ArgumentIndex;
 
-  template <size_t Index>
+  template <std::size_t Index>
   struct ArgumentIndex<Index, Arguments<>>
   {
-      static_assert(AlwaysFalse<std::integral_constant<size_t, Index>>, "Argument index out of bounds");
+      static_assert(AlwaysFalse<std::integral_constant<std::size_t, Index>>, "Argument index out of bounds");
   };
 
   template <typename FirstType, typename... RestType>
@@ -72,20 +80,20 @@ namespace Cxx::Traits::TypeParameters::inline V2
       using ArgumentType = FirstType;
   };
 
-  template <size_t Index, typename FirstType, typename... RestType>
+  template <std::size_t Index, typename FirstType, typename... RestType>
   struct ArgumentIndex<Index, Arguments<FirstType, RestType...>> : ArgumentIndex<Index - 1, Arguments<RestType...>>
   {
   }; // Recursive ArgumentIndex Definition
 
-  template <size_t Index, typename ArgumentPack>
+  template <std::size_t Index, typename ArgumentPack>
   using ArgumentIndexType = typename ArgumentIndex<Index, ArgumentPack>::ArgumentType;
 
   template <typename... Types>
   struct Arguments
   {
-      inline static constexpr size_t ArgumentCount = sizeof...(Types);
+      inline static constexpr std::size_t ArgumentCount = sizeof...(Types);
 
-      template <size_t Index>
+      template <std::size_t Index>
       using ArgumentIndex = ArgumentIndexType<Index, Arguments<Types...>>;
   };
 
@@ -107,12 +115,12 @@ namespace Cxx::Traits::TypeParameters::inline V2
   template <typename TemplateType>
   using TemplateArguments = typename Details::TemplateArguments<TemplateType>::Arguments;
 
-  template <size_t I, typename T>
+  template <std::size_t I, typename T>
   struct Arg
   {
       using Type = T;
 
-      inline static constexpr size_t Index = I;
+      inline static constexpr std::size_t Index = I;
   };
 
   namespace Details
@@ -121,43 +129,43 @@ namespace Cxx::Traits::TypeParameters::inline V2
     {
     };
 
-    template <bool ExistsIndex, size_t ReplaceIndex, typename ReplaceArguments>
+    template <bool ExistsIndex, std::size_t ReplaceIndex, typename ReplaceArguments>
     struct FindIndexResult;
 
-    template <size_t ReplaceIndex, typename ReplaceArguments>
+    template <std::size_t ReplaceIndex, typename ReplaceArguments>
     struct FindIndexResult<false, ReplaceIndex, ReplaceArguments>
     {
         using Type = NotFound;
     };
 
-    template <size_t ReplaceIndex, template <typename...> class ReplaceArguments, typename... ReplaceArgType>
+    template <std::size_t ReplaceIndex, template <typename...> class ReplaceArguments, typename... ReplaceArgType>
     struct FindIndexResult<true, ReplaceIndex, ReplaceArguments<ReplaceArgType...>>
     {
         using Type = typename ReplaceArguments<ReplaceArgType...>::template ArgumentIndex<ReplaceIndex>::Type;
     };
 
-    template <size_t SearchIndex, class ReplaceArguments, class ReplaceArgumentIndices>
+    template <std::size_t SearchIndex, class ReplaceArguments, class ReplaceArgumentIndices>
     struct FindIndex;
 
-    template <size_t TemplateSearchIndex, template <typename...> class ReplaceArguments, typename... ReplaceArgType, size_t... ReplaceArgIndex>
+    template <std::size_t TemplateSearchIndex, template <typename...> class ReplaceArguments, typename... ReplaceArgType, std::size_t... ReplaceArgIndex>
     struct FindIndex<TemplateSearchIndex, ReplaceArguments<ReplaceArgType...>, std::index_sequence<ReplaceArgIndex...>>
     {
-        inline static constexpr size_t TemplateIndex = TemplateSearchIndex;
-        inline static constexpr size_t IndexNotFound = static_cast<size_t>(-1);
+        inline static constexpr std::size_t TemplateIndex = TemplateSearchIndex;
+        inline static constexpr std::size_t IndexNotFound = static_cast<std::size_t>(-1);
 
         struct ValueIndex
         {
-            constexpr ValueIndex(const size_t index, const size_t replace_index) noexcept
+            constexpr ValueIndex(const std::size_t index, const std::size_t replace_index) noexcept
               : Index{ index }
               , ReplaceIndex{ replace_index }
             {
             }
 
-            size_t Index;
-            size_t ReplaceIndex;
+            std::size_t Index;
+            std::size_t ReplaceIndex;
         };
 
-        inline static consteval size_t SearchIndex() noexcept
+        inline static consteval std::size_t SearchIndex() noexcept
         {
           // clang-format off
           for ( const auto& [Index, ReplaceIndex] : std::initializer_list<ValueIndex> {
@@ -186,7 +194,7 @@ namespace Cxx::Traits::TypeParameters::inline V2
     template <typename TemplateType, typename TemplateIndices, typename ReplaceArgs>
     struct ReplaceArgumentsImpl;
 
-    template <template <typename...> class TemplateType, typename... TypeParameters, size_t... TemplateArgIndex, size_t... ReplaceArgIndex, typename... ReplaceArgType>
+    template <template <typename...> class TemplateType, typename... TypeParameters, std::size_t... TemplateArgIndex, std::size_t... ReplaceArgIndex, typename... ReplaceArgType>
     struct ReplaceArgumentsImpl<TemplateType<TypeParameters...>, std::index_sequence<TemplateArgIndex...>, Arguments<Arg<ReplaceArgIndex, ReplaceArgType>...>>
     {
         using FindIndexArgs = Arguments<FindIndex<TemplateArgIndex, Arguments<Arg<ReplaceArgIndex, ReplaceArgType>...>, std::index_sequence_for<ReplaceArgType...>>...>;
@@ -199,20 +207,20 @@ namespace Cxx::Traits::TypeParameters::inline V2
     template <typename Arguments, typename Indices>
     struct ArgPackImpl;
 
-    template <typename... Type, size_t... Index>
+    template <typename... Type, std::size_t... Index>
     struct ArgPackImpl<Arguments<Type...>, std::index_sequence<Index...>>
     {
         using Types = Arguments<Arg<Index, Type>...>;
     };
   } // namespace Details
 
-  template <typename... Types>
-  using ArgPack = typename Details::ArgPackImpl<Arguments<Types...>, std::index_sequence_for<Types...>>::Types;
+  template <typename... Ts>
+  using ArgPack = typename Details::ArgPackImpl<Arguments<Ts...>, std::index_sequence_for<Ts...>>::Types;
 
   template <typename TemplateType, typename ArgPack, typename... ArgIndex>
   struct ReplaceArguments;
 
-  template <template <typename...> class TemplateType, typename... Types, size_t ArgIndex0, typename ArgType0, size_t... ArgIndex, typename... ArgType>
+  template <template <typename...> class TemplateType, typename... Types, std::size_t ArgIndex0, typename ArgType0, std::size_t... ArgIndex, typename... ArgType>
   struct ReplaceArguments<TemplateType<Types...>, Arg<ArgIndex0, ArgType0>, Arg<ArgIndex, ArgType>...> : Details::ReplaceArgumentsImpl<TemplateType<Types...>, std::index_sequence_for<Types...>, Arguments<Arg<ArgIndex0, ArgType0>, Arg<ArgIndex, ArgType>...>>
   {
       inline static consteval bool CheckArgs()
@@ -224,7 +232,7 @@ namespace Cxx::Traits::TypeParameters::inline V2
       static_assert(CheckArgs(), "All argument indices must be greater than or equal to zero and less than the maximum number of arguments of type template");
   };
 
-  template <template <typename...> class TemplateType, typename... Types, size_t... ArgIndex, typename... ArgType>
+  template <template <typename...> class TemplateType, typename... Types, std::size_t... ArgIndex, typename... ArgType>
   struct ReplaceArguments<TemplateType<Types...>, Arguments<Arg<ArgIndex, ArgType>...>> : ReplaceArguments<TemplateType<Types...>, Arg<ArgIndex, ArgType>...>
   {
   };
@@ -232,11 +240,8 @@ namespace Cxx::Traits::TypeParameters::inline V2
 
 namespace Cxx::Traits
 {
-  template <typename>
-  inline constexpr bool AlwaysFalse = false; // false value attached to a dependent name (for static_assert)
-
-  template <size_t Size>
-  inline constexpr size_t NumberOfArguments = Size;
+  template <std::size_t Size>
+  inline constexpr std::size_t NumberOfArguments = Size;
 
   template <typename Type, typename... Types>
   inline constexpr bool IsAnyOf = std::disjunction_v<std::is_same<Type, Types>...>;
@@ -251,11 +256,11 @@ namespace Cxx::Traits
       using TypeParameters = TypeParameters::TemplateArguments<Template>;
       using ElementType    = TypeParameters::template ArgumentIndex<0>;
 
-      template <size_t Index>
+      template <std::size_t Index>
       using TypeParameter = TypeParameters::template ArgumentIndex<Index>;
 
-      template <typename... Types>
-      using Rebind = typename Cxx::Traits::TypeParameters::ReplaceArguments<Template, Cxx::Traits::TypeParameters::ArgPack<Types...>>::Type;
+      template <typename... Ts>
+      using Rebind = typename Cxx::Traits::TypeParameters::ReplaceArguments<Template, Cxx::Traits::TypeParameters::ArgPack<Ts...>>::Type;
   };
 
   template <typename Type, typename Category = std::weak_ordering>

@@ -3,6 +3,7 @@
 
 #include "Cxx/ExtensionMethods.hpp"
 #include "Cxx/TypeTraits.hpp"
+#include "Cxx/Platform.hpp"
 
 #include <iostream>
 #include <string>
@@ -17,11 +18,13 @@
 #include <memory>
 #include <sstream>
 
-#pragma warning(push)
-#pragma warning(disable : 4455)
+DISABLE_WARNING_PUSH
+DISABLE_WARNING_RESERVED_USER_DEFINED_LITERAL
+
 using std::literals::operator""s;
 using std::literals::operator""sv;
-#pragma warning(pop)
+
+DISABLE_WARNING_POP
 
 using namespace Cxx;
 using namespace Cxx::LINQ::MethodSyntax;
@@ -38,7 +41,7 @@ auto ShowLog() noexcept
 {
   return [&](const std::string& Value) -> void
   {
-    printf_s("Log: (String) %s\n", Value.c_str());
+    printf("Log: (String) %s\n", Value.c_str());
   };
 }
 

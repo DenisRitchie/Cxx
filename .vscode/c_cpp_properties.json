@@ -23,7 +23,7 @@
                 "_SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING",
                 "_SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS"
             ],
-            "cStandard": "c17",
+            "cStandard": "c23",
             "cppStandard": "c++23",
             "compilerPath": "${MicrosoftVisualStudioPath}/Microsoft Visual Studio/${VisualStudioVersion}/${VisualStudioEdition}/VC/Tools/MSVC/14.34.31933/bin/Hostx64/x64/cl.exe",
             "compilerArgs": [
@@ -42,12 +42,13 @@
             "includePath": [
                 "${workspaceFolder}/**"
             ],
+            "defines": [],
             "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu23",
+            "cppStandard": "gnu++23",
             "compilerArgs": [],
             "configurationProvider": "ms-vscode.cmake-tools",
-            "intelliSenseMode": "linux-gcc-x64",
-            "cStandard": "gnu17",
-            "cppStandard": "gnu++17"
+            "intelliSenseMode": "linux-gcc-x64"
         }
     ],
     "version": 4

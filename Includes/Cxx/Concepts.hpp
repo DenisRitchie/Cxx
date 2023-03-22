@@ -86,6 +86,33 @@ namespace Cxx::Concepts
   template <class Type>
   concept CanReference = requires { typename WithReference<Type>; };
 
+  template <class Type>
+  concept Dereferenceable = requires(Type& value) // clang-format off
+  {
+    { *value } -> CanReference;
+  }; // clang-format on
+
+  template <class Type>
+  concept HasMemberIteratorConcept = requires { typename Type::iterator_concept; };
+
+  template <class Type>
+  concept HasMemberIteratorCategory = requires { typename Type::iterator_category; };
+
+  template <class Type>
+  concept HasMemberValueType = requires { typename Type::value_type; };
+
+  template <class Type>
+  concept HasMemberElementType = requires { typename Type::element_type; };
+
+  template <class Type>
+  concept HasMemberDifferenceType = requires { typename Type::difference_type; };
+
+  template <class Type>
+  concept HasMemberPointer = requires { typename Type::pointer; };
+
+  template <class Type>
+  concept HasMemberReference = requires { typename Type::reference; };
+
   template <class Iterator>
   concept Cpp17Iterator = // clang-format off
     std::copyable<Iterator> and requires(Iterator it)
@@ -93,6 +120,19 @@ namespace Cxx::Concepts
       { *it   } -> CanReference;
       { ++it  } -> std::same_as<Iterator&>;
       { *it++ } -> CanReference;
+    }; // clang-format on
+
+  template <class Iterator>
+  concept Cpp17InputIterator = // clang-format off
+    Cpp17Iterator<Iterator>
+    && std::equality_comparable<Iterator>
+    && HasMemberDifferenceType<std::incrementable_traits<Iterator>>
+    && HasMemberValueType<std::indirectly_readable_traits<Iterator>>
+    && requires(Iterator it)
+    {
+        typename std::common_reference_t<std::iter_reference_t<Iterator>&&, typename std::indirectly_readable_traits<Iterator>::value_type&>;
+        typename std::common_reference_t<decltype(*it++)&&, typename std::indirectly_readable_traits<Iterator>::value_type&>;
+        requires std::signed_integral<typename std::incrementable_traits<Iterator>::difference_type>;
     }; // clang-format on
 
   template <typename Type>

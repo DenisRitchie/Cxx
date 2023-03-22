@@ -1,6 +1,7 @@
 #include "Cxx/DesignPatterns/ServiceLocator.hpp"
 
 #include <atomic>
+#include <memory>
 #include <mutex>
 
 namespace Cxx::DesignPatterns

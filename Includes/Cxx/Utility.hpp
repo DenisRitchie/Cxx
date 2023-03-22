@@ -223,8 +223,8 @@ namespace Cxx
       constexpr zstring_sentinel zcend() const noexcept;
 
     private:
-      size_type     m_Size;
       const_pointer m_Pointer;
+      size_type     m_Size;
   };
 
   inline namespace Literals
@@ -265,7 +265,7 @@ namespace Cxx
     struct StringTraits;
 
     template <std::ranges::contiguous_range T>
-    requires not requires { typename std::remove_cvref_t<T>::traits_type; } // clang-format off
+    requires(not requires { typename std::remove_cvref_t<T>::traits_type; }) // clang-format off
     struct StringTraits<T, std::void_t<std::ranges::range_value_t<std::remove_reference_t<T>>>> // clang-format on
     {
         using Type       = std::ranges::range_value_t<std::remove_reference_t<T>>;
@@ -307,6 +307,25 @@ namespace Cxx
       requires { typename Traits::CharacterTypeOf<StringType>; } and //
       std::constructible_from<std::basic_string_view<Traits::CharacterTypeOf<StringType>, Traits::CharacterTraitsOf<StringType>>, StringType>;
   }
+
+  template <std::ranges::input_range Range>
+  struct PhonyInputIterator
+  {
+      using iterator_category = std::input_iterator_tag;
+      using iterator_concept  = std::input_iterator_tag;
+      using value_type        = std::ranges::range_value_t<Range>;
+      using difference_type   = std::ptrdiff_t;
+      using pointer           = std::add_pointer_t<std::ranges::range_reference_t<Range>>;
+      using reference         = std::ranges::range_reference_t<Range>;
+
+      reference operator*() const;
+      pointer   operator->() const;
+
+      PhonyInputIterator& operator++();
+      PhonyInputIterator  operator++(int32_t);
+
+      bool operator==(const PhonyInputIterator&) const;
+  };
 } // namespace Cxx
 
 #include "Implementations/Utility.tcc"

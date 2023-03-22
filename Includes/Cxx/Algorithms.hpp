@@ -40,6 +40,195 @@
 #include <cuchar>
 #include <ctime>
 
+#if defined(__GNUC__)
+
+namespace std
+{
+  struct from_range_t
+  {
+      explicit from_range_t() = default;
+  };
+
+  inline constexpr from_range_t from_range;
+} // namespace std
+
+namespace std::ranges
+{
+  template <class Derived>
+  requires std::is_class_v<Derived> && std::same_as<Derived, remove_cv_t<Derived>>
+  struct range_adaptor_closure : std::ranges::views::__adaptor::_RangeAdaptorClosure
+  {
+  };
+
+# ifndef __cpp_lib_ranges_to_container
+  namespace Details
+  {
+    // clang-format off
+    template <class Range, class Container>
+    concept SizedAndReservable = sized_range<Range> && sized_range<Container>
+        && requires(Container& Cont, const range_size_t<Container> Count)
+        {
+            Cont.reserve(Count);
+            { Cont.capacity() } -> same_as<range_size_t<Container>>;
+            { Cont.max_size() } -> same_as<range_size_t<Container>>;
+        };
+    // clang-format on
+
+    template <class Range, class Container>
+    concept RefConverts = convertible_to<range_reference_t<Range>, range_value_t<Container>>;
+
+    template <class Range, class Container, class... Types>
+    concept ConvertsDirectConstructible = RefConverts<Range, Container> && constructible_from<Container, Range, Types...>;
+
+    template <class Range, class Container, class... Types>
+    concept ConvertsTagConstructible = RefConverts<Range, Container> && constructible_from<Container, const from_range_t&, Range, Types...>;
+
+    template <class Range, class Container, class... Types>
+    concept ConvertsAndCommonConstructible =                  //
+      RefConverts<Range, Container> && common_range<Range>    //
+      && Cxx::Concepts::Cpp17InputIterator<iterator_t<Range>> //
+      && constructible_from<Container, iterator_t<Range>, iterator_t<Range>, Types...>;
+
+    template <class Container, class Reference>
+    concept CanPushBack = requires(Container& Cont) { Cont.push_back(std::declval<Reference>()); };
+
+    template <class Container, class Reference>
+    concept CanInsertEnd = requires(Container& Cont) { Cont.insert(Cont.end(), std::declval<Reference>()); };
+
+    // clang-format off
+    template <class Range, class Container, class... Types>
+    concept ConvertsConstructibleInsertable = RefConverts<Range, Container>
+        && constructible_from<Container, Types...>
+        && (CanPushBack<Container, range_reference_t<Range>> || CanInsertEnd<Container, range_reference_t<Range>>); // clang-format on
+
+    template <class Reference, class Container>
+    [[nodiscard]] constexpr auto ContainerInserter(Container& Cont)
+    {
+      if constexpr ( Details::CanPushBack<Container, Reference> )
+      {
+        return back_insert_iterator{ Cont };
+      }
+      else
+      {
+        return insert_iterator{ Cont, Cont.end() };
+      }
+    }
+  } // namespace Details
+
+  template <class Container, input_range Range, class... Types>
+  requires(not view<Container>)
+  [[nodiscard]] constexpr Container to(Range&& range, Types&&... args)
+  {
+    if constexpr ( Details::ConvertsDirectConstructible<Range, Container, Types...> )
+    {
+      return Container(std::forward<Range>(range), std::forward<Types>(args)...);
+    }
+    else if constexpr ( Details::ConvertsTagConstructible<Range, Container, Types...> )
+    {
+      return Container(from_range, std::forward<Range>(range), std::forward<Types>(args)...);
+    }
+    else if constexpr ( Details::ConvertsAndCommonConstructible<Range, Container, Types...> )
+    {
+      return Container(std::ranges::begin(range), std::ranges::end(range), std::forward<Types...>(args)...);
+    }
+    else if constexpr ( Details::ConvertsConstructibleInsertable<Range, Container, Types...> )
+    {
+      Container Cont(std::forward<Types>(args)...);
+
+      if constexpr ( Details::SizedAndReservable<Range, Container> )
+      {
+        Cont.reserve(std::ranges::size(range));
+      }
+
+      std::ranges::copy(range, Details::ContainerInserter<range_reference_t<Range>>(Cont));
+      return Cont;
+    }
+    else if constexpr ( input_range<range_reference_t<Range>> )
+    {
+      const auto Xform = [](auto&& element)
+      {
+        return std::ranges::to<range_value_t<Container>>(std::forward<decltype(element)>(element));
+      };
+
+      return std::ranges::to<Container>(views::transform(range, Xform), std::forward<Types>(args)...);
+    }
+    else
+    {
+      static_assert(Cxx::Traits::AlwaysFalse<Container>, "the program is ill-formed per N4910 [range.utility.conv.to]/1.3");
+    }
+  }
+
+  namespace Details
+  {
+    template <class Container>
+    struct ToClassFunction
+    {
+        static_assert(not view<Container>, "not view<_Container>");
+
+        template <input_range Range, class... Types>
+        [[nodiscard]] constexpr auto operator()(Range&& range, Types&&... args) const
+        requires requires { std::ranges::to<Container>(std::forward<Range>(range), std::forward<Types>(args)...); }
+        {
+          return std::ranges::to<Container>(std::forward<Range>(range), std::forward<Types>(args)...);
+        }
+    };
+  } // namespace Details
+
+  template <class Container, class... Types>
+  requires(not view<Container>)
+  [[nodiscard]] constexpr auto to(Types&&... args)
+  {
+    return std::ranges::views::__adaptor::_Partial<Details::ToClassFunction<Container>, decay_t<Types>...>{ std::forward<Types>(args)... };
+  }
+
+  namespace Details
+  {
+    template <template <class...> class Container, class Range, class... Args>
+    auto ToHelper()
+    {
+      if constexpr ( requires { Container(std::declval<Range>(), std::declval<Args>()...); } )
+      {
+        return static_cast<decltype(Container(std::declval<Range>(), std::declval<Args>()...))*>(nullptr);
+      }
+      else if constexpr ( requires { Container(from_range, std::declval<Range>(), std::declval<Args>()...); } )
+      {
+        return static_cast<decltype(Container(from_range, std::declval<Range>(), std::declval<Args>()...))*>(nullptr);
+      }
+      else if constexpr ( requires { Container(std::declval<Cxx::PhonyInputIterator<Range>>(), std::declval<Cxx::PhonyInputIterator<Range>>(), std::declval<Args>()...); } )
+      {
+        return static_cast<decltype(Container(std::declval<Cxx::PhonyInputIterator<Range>>(), std::declval<Cxx::PhonyInputIterator<Range>>(), std::declval<Args>()...))*>(nullptr);
+      }
+    }
+  } // namespace Details
+
+  template <template <class...> class Container, input_range Range, class... Types, class Deduced = remove_pointer_t<decltype(Details::ToHelper<Container, Range, Types...>())>>
+  [[nodiscard]] constexpr Deduced to(Range&& range, Types&&... args)
+  {
+    return std::ranges::to<Deduced>(std::forward<Range>(range), std::forward<Types>(args)...);
+  }
+
+  namespace Details
+  {
+    template <template <class...> class Container>
+    struct ToTemplateFunction
+    {
+        template <input_range Range, class... Types, class Deduced = remove_pointer_t<decltype(ToHelper<Container, Range, Types...>())>>
+        [[nodiscard]] constexpr auto operator()(Range&& range, Types&&... args) const
+        {
+          return std::ranges::to<Deduced>(std::forward<Range>(range), std::forward<Types>(args)...);
+        }
+    };
+  } // namespace Details
+
+  template <template <class...> class Container, class... Types>
+  [[nodiscard]] constexpr auto to(Types&&... args)
+  {
+    return std::ranges::views::__adaptor::_Partial<Details::ToTemplateFunction<Container>, decay_t<Types>...>{ std::forward<Types>(args)... };
+  }
+# endif // __cpp_lib_ranges_to_container
+} // namespace std::ranges
+#endif
+
 namespace Cxx
 {
   namespace Algorithms

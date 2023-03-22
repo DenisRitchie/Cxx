@@ -1,12 +1,16 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#pragma warning(push)
-#pragma warning(disable : 4996)
+#ifdef _MSC_VER
+# pragma warning(push)
+# pragma warning(disable : 4996)
+# include <__msvc_all_public_headers.hpp>
+# pragma warning(pop)
+#else
+# include <bits/stdc++.h>
+#endif
 
-#include <__msvc_all_public_headers.hpp>
-
-#pragma warning(pop)
+#ifdef __cpp_explicit_this_parameter
 
 struct MyTestClass;
 
@@ -44,3 +48,5 @@ TEST(DeduceThisTest, DeduceThis)
   MyTestStruct object1;
   object1.ExternalMethod();
 }
+
+#endif
